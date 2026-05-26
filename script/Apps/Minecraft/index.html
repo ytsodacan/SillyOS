@@ -5,151 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecraft</title>
     <style>
-        /* Scoped entirely to this document - nothing leaks into the iframe */
         *, *::before, *::after { box-sizing: border-box; }
         html, body {
-            all: unset;
-            display: block;
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background: #1a1a1a;
-            font-family: sans-serif;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #111; font-family: sans-serif;
         }
-        #container {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
+
+        /* ── NAV BAR ────────────────────────────────────── */
+        #nav-bar {
+            position: fixed; top: 0; left: 0; right: 0; height: 40px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 8px; padding: 0 10px;
+            z-index: 100;
         }
-        #game-frame {
-            /* Explicit reset so no parent style bleeds in */
-            all: unset;
-            display: block;
-            width: 100%;
-            flex: 1;
-            border: none;
-            background: #000;
+        #nav-bar button {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+            color: white; padding: 4px 12px; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: 600; transition: background 0.2s;
+            display: flex; align-items: center; gap: 5px; white-space: nowrap;
         }
+        #nav-bar button:hover { background: rgba(255,255,255,0.2); }
+        #nav-title {
+            flex: 1; color: rgba(255,255,255,0.5); font-size: 12px;
+            letter-spacing: 2px; text-align: center; font-weight: 600;
+        }
+
+        /* ── LOADER ──────────────────────────────────────── */
         #loader {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #111;
-            z-index: 10;
-            gap: 16px;
+            position: fixed; inset: 40px 0 0 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #111; z-index: 50; gap: 16px;
+            transition: opacity 0.4s;
         }
-        #loader img {
-            width: 72px;
-            height: 72px;
-            image-rendering: pixelated;
-        }
-        .mc-title {
-            color: #fff;
-            font-size: 18px;
-            font-weight: bold;
-            letter-spacing: 3px;
-            text-shadow: 2px 2px #000;
-        }
-        .mc-bar-wrap {
-            width: 220px;
-            height: 8px;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .mc-bar-fill {
-            height: 100%;
-            width: 0;
-            background: linear-gradient(90deg, #4a8c1c, #6ab02a);
-            animation: mcload 1.6s ease-out forwards;
-        }
+        #loader img { width: 72px; height: 72px; image-rendering: pixelated; }
+        .mc-title { color: #fff; font-size: 18px; font-weight: bold; letter-spacing: 3px; text-shadow: 2px 2px #000; }
+        .mc-bar-wrap { width: 220px; height: 8px; background: #222; border: 1px solid #444; border-radius: 2px; overflow: hidden; }
+        .mc-bar-fill { height: 100%; width: 0; background: linear-gradient(90deg, #4a8c1c, #6ab02a); animation: mcload 1.6s ease-out forwards; }
         @keyframes mcload { to { width: 100%; } }
         .mc-sub { color: #555; font-size: 11px; letter-spacing: 1px; }
 
-        #fs-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            z-index: 20;
-            background: rgba(0,0,0,0.55);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: #ccc;
-            padding: 5px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            opacity: 0.4;
-            transition: opacity 0.2s;
-            user-select: none;
+        /* ── GAME IFRAME ─────────────────────────────────── */
+        #game-frame {
+            position: fixed; inset: 40px 0 0 0;
+            border: none; width: 100%; height: calc(100% - 40px);
+            background: #000; display: block;
         }
-        #fs-btn:hover { opacity: 1; }
+
+        /* ── FULLSCREEN BUTTON ───────────────────────────── */
+        #fs-btn {
+            position: fixed; bottom: 12px; right: 12px; z-index: 200;
+            background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.14);
+            color: #ccc; padding: 6px 12px; border-radius: 7px; cursor: pointer;
+            font-size: 12px; display: flex; align-items: center; gap: 5px;
+            opacity: 0; transition: opacity 0.2s; user-select: none;
+            pointer-events: none;
+        }
+        #fs-btn.ready { opacity: 0.45; pointer-events: all; }
+        #fs-btn.ready:hover { opacity: 1; }
         #fs-btn svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
     </style>
 </head>
 <body>
-<div id="container">
-    <div id="loader">
-        <img src="icon.png" alt="Minecraft">
-        <div class="mc-title">MINECRAFT</div>
-        <div class="mc-bar-wrap"><div class="mc-bar-fill"></div></div>
-        <div class="mc-sub">LOADING...</div>
-    </div>
 
-    <iframe
-        id="game-frame"
-        src="about:blank"
-        allowfullscreen
-        allow="autoplay; fullscreen; gamepad; microphone; camera; pointer-lock; clipboard-read; clipboard-write"
-        referrerpolicy="no-referrer"
-    ></iframe>
-
-    <button id="fs-btn" onclick="toggleFS()" title="Fullscreen">
-        <svg id="ico-expand" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-        <svg id="ico-compress" viewBox="0 0 24 24" style="display:none"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
-        Fullscreen
-    </button>
+<!-- Nav bar with back button -->
+<div id="nav-bar">
+    <button onclick="goBack()">&#8592; Back</button>
+    <div id="nav-title">MINECRAFT</div>
+    <button id="fs-nav-btn" onclick="toggleFS()" style="display:none">⛶ Fullscreen</button>
 </div>
 
+<!-- Loading screen -->
+<div id="loader">
+    <img src="icon.png" alt="Minecraft" onerror="this.style.display='none'">
+    <div class="mc-title">MINECRAFT</div>
+    <div class="mc-bar-wrap"><div class="mc-bar-fill"></div></div>
+    <div class="mc-sub">LOADING...</div>
+</div>
+
+<!-- Game iframe -->
+<iframe
+    id="game-frame"
+    src="about:blank"
+    allowfullscreen
+    allow="autoplay; fullscreen; gamepad; pointer-lock; clipboard-read; clipboard-write; microphone; camera"
+    referrerpolicy="no-referrer">
+</iframe>
+
+<!-- Floating fullscreen button -->
+<button id="fs-btn" onclick="toggleFS()" title="Fullscreen">
+    <svg id="ico-expand"   viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+    <svg id="ico-compress" viewBox="0 0 24 24" style="display:none"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+    Fullscreen
+</button>
+
 <script>
+    var loaded = false;
+
+    // Load game after animation
     setTimeout(function() {
         var loader = document.getElementById('loader');
-        var frame  = document.getElementById('game-frame');
-        loader.style.transition = 'opacity 0.4s';
         loader.style.opacity = '0';
         setTimeout(function() {
             loader.style.display = 'none';
-            frame.src = 'https://ytsodacan.github.io/minecraft';
-        }, 400);
+            document.getElementById('game-frame').src = 'https://ytsodacan.github.io/minecraft';
+            document.getElementById('fs-btn').classList.add('ready');
+            document.getElementById('fs-nav-btn').style.display = 'flex';
+            loaded = true;
+        }, 420);
     }, 1700);
 
+    // Back button — notify the parent OS to close this window
+    function goBack() {
+        // Try to tell parent frame to close this window
+        try {
+            // Walk up to the OS and close this app window
+            if (window.parent && window.parent.closeWindow) {
+                window.parent.closeWindow('minecraft');
+            } else if (window.parent !== window) {
+                window.parent.postMessage({ action: 'closeApp', id: 'minecraft' }, '*');
+            }
+        } catch(e) {}
+        // If we're standalone, just clear the iframe
+        document.getElementById('game-frame').src = 'about:blank';
+    }
+
+    // Fullscreen — target the entire document root (works from inside nested iframes)
     function toggleFS() {
-        var el = document.getElementById('game-frame');
-        if (!document.fullscreenElement) {
-            (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen).call(el);
+        var fsTarget = document.documentElement; // fullscreen the whole MC app page
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            var req = fsTarget.requestFullscreen || fsTarget.webkitRequestFullscreen || fsTarget.mozRequestFullScreen;
+            if (req) req.call(fsTarget);
         } else {
-            (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
+            var exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+            if (exit) exit.call(document);
         }
     }
 
-    document.addEventListener('fullscreenchange', function() {
-        var expand   = document.getElementById('ico-expand');
-        var compress = document.getElementById('ico-compress');
-        if (document.fullscreenElement) {
-            expand.style.display   = 'none';
-            compress.style.display = 'block';
-        } else {
-            expand.style.display   = 'block';
-            compress.style.display = 'none';
-        }
-    });
+    // Sync icon state
+    function onFSChange() {
+        var inFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        document.getElementById('ico-expand').style.display   = inFS ? 'none' : 'block';
+        document.getElementById('ico-compress').style.display = inFS ? 'block' : 'none';
+    }
+    document.addEventListener('fullscreenchange',       onFSChange);
+    document.addEventListener('webkitfullscreenchange', onFSChange);
+    document.addEventListener('mozfullscreenchange',    onFSChange);
 </script>
 </body>
 </html>
