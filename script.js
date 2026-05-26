@@ -17,7 +17,7 @@ var APPS = {
     'Fortnite': {title: 'Fortnite', path: 'script/Apps/Fortnite/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShiXrQ-cvZeDyQNPIZCv_hsaUCAe5j_rXJ7Q&s', pinned: false},
     'RocketL': {title: 'Rocket League', path: 'script/Apps/RocketL/index.html', icon: 'https://ygo-assets-entities-us.yougov.net/87bb7a16-2b62-11e8-82b1-37bb0d207ced.jpg?zcw=518&zch=518&zct=10&zcl=0', pinned: false},
     'Xbox': {title: 'Xbox', path: 'script/Apps/Xbox/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRknRQh-WRK4F75YB3EAlfrsqAk66Xjn45sBg&s', pinned: false},
-    'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Minecraft_Steve_head.png/240px-Minecraft_Steve_head.png', pinned: true},
+    'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true},
 };
 
 var savedPins = localStorage.getItem('c_pins_v2');
@@ -520,7 +520,7 @@ function openWindow(id) {
         let dat = APPS[id] || {title: 'APP', path: 'about:blank'};
         win = document.createElement('div');
         win.id = 'win-' + id;
-        win.className = 'window active header-visible';
+        win.className = 'window active header-visible' + (dat.windowed ? ' windowed' : '');
         win.style.zIndex = ++highestZ;
         
         let iframeStr = dat.internal ? '<iframe id="frame-' + id + '"></iframe>' : '<iframe id="frame-' + id + '" src="' + dat.path + '"></iframe>';
