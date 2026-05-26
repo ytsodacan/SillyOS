@@ -3,7 +3,7 @@ var _devBuildVer = "3.0.1";
 
 var APPS = {
     'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true},
-    'games': {title: 'Game Library', path: 'script/Apps/Games/index.html', icon: 'script/Apps/Games/icon.svg', pinned: true},
+    'games': {title: 'Game Library', path: 'script/Apps/Games/index.html', icon: 'script/Apps/Games/icon.png', pinned: true},
     'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Chrome_icon_%28February_2022%29.svg/2048px-Google_Chrome_icon_%28February_2022%29.svg.png', pinned: true},
     'spotify': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg', pinned: true},
     'settings': {title: 'Settings', internal: true, icon: 'https://cdn.iconscout.com/icon/free/png-256/free-apple-settings-icon-svg-download-png-493162.png', pinned: true},
@@ -696,10 +696,10 @@ dEl.addEventListener('mouseenter', function() { clearTimeout(dockTimer); });
 
 // Header is always visible — immersive mouseover removed
 
-var desktopLayout = JSON.parse(localStorage.getItem('silly_desktop_v2')) || [];
+var desktopLayout = JSON.parse(localStorage.getItem('silly_desktop_v3')) || [];
 
 function saveDesktop() {
-    localStorage.setItem('silly_desktop_v2', JSON.stringify(desktopLayout));
+    localStorage.setItem('silly_desktop_v3', JSON.stringify(desktopLayout));
     loadDesktop();
 }
 
