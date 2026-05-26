@@ -3,7 +3,7 @@ var _devBuildVer = "3.0.1";
 
 var APPS = {
     'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true},
-    'games': {title: 'Games', path: 'script/Apps/Games/index.html', icon: 'https://cdn-icons-png.flaticon.com/512/3408/3408517.png', pinned: true},
+    'games': {title: 'Games', path: 'script/Apps/Games/index.html', icon: 'https://img.icons8.com/fluency/512/controller.png', pinned: true},
     'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Chrome_icon_%28February_2022%29.svg/2048px-Google_Chrome_icon_%28February_2022%29.svg.png', pinned: true},
     'spotify': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg', pinned: true},
     'settings': {title: 'Settings', internal: true, icon: 'https://cdn.iconscout.com/icon/free/png-256/free-apple-settings-icon-svg-download-png-493162.png', pinned: true},

@@ -61,6 +61,7 @@
 <div id="nav-bar">
     <button id="btn-back" onclick="goBack()" disabled>&#8592; Back</button>
     <div id="nav-url">Games Library</div>
+    <button id="btn-newtab" onclick="openInNewTab()" style="display:none">&#x2197; New Tab</button>
     <button id="btn-fs" onclick="toggleFullscreen()" style="display:none">&#x26F6; Fullscreen</button>
 </div>
 
@@ -99,6 +100,8 @@
         document.getElementById('nav-url').textContent = url;
         document.getElementById('btn-back').disabled = false;
         document.getElementById('btn-fs').style.display = 'flex';
+        document.getElementById('btn-newtab').style.display = 'flex';
+        document.getElementById('btn-newtab').setAttribute('data-url', url);
     }
 
     function goBack() {
@@ -107,7 +110,13 @@
         document.getElementById('nav-url').textContent = 'Games Library';
         document.getElementById('btn-back').disabled = true;
         document.getElementById('btn-fs').style.display = 'none';
+        document.getElementById('btn-newtab').style.display = 'none';
         if (document.fullscreenElement) document.exitFullscreen();
+    }
+
+    function openInNewTab() {
+        var url = document.getElementById('btn-newtab').getAttribute('data-url');
+        if (url) window.open(url, '_blank');
     }
 
     function toggleFullscreen() {
