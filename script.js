@@ -63,7 +63,7 @@ var wallpaperRegistry = {
 
 var sysConfig = JSON.parse(localStorage.getItem('cine_sys_config')) || {};
 if(sysConfig.optBg === undefined) sysConfig.optBg = false;
-if(sysConfig.shortBoot === undefined) sysConfig.shortBoot = false;
+if(sysConfig.shortBoot === undefined) sysConfig.shortBoot = true;
 if(sysConfig.wpLoop === undefined) sysConfig.wpLoop = false;
 if(sysConfig.idleLock === undefined) sysConfig.idleLock = false; 
 if(sysConfig.redirectConfirm === undefined) sysConfig.redirectConfirm = false; 
