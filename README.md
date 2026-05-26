@@ -1,12 +1,3 @@
-TO ADD LIST!
+SillyOS!
 
-
-Working Split Screen
-
-Better Movies Site
-
-Fix Proxy
-
-Fix folders and AI
-
-More Features (brain-storm)
+A fork of CineOS with more features.
