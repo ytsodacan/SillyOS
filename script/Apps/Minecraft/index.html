@@ -43,7 +43,7 @@
 <div id="nav-bar">
     <button onclick="goBack()">&#8592; Back</button>
     <div id="nav-title">MINECRAFT</div>
-    <button id="fs-nav-btn" onclick="toggleFS()" style="display:none">&#x26F6; Fullscreen</button>
+    <button id="fs-nav-btn" onclick="toggleFS()" style="display:none">&#x2197; Open in New Tab</button>
 </div>
 
 <div id="loader">
@@ -78,21 +78,9 @@
         document.getElementById('game-frame').src = 'about:blank';
     }
 
-    // Send fullscreen request to the parent OS window (works from inside nested iframes)
+    // Open the game in a new tab for true fullscreen
     function toggleFS() {
-        try {
-            // Try direct approach first (works if not nested)
-            var t = document.documentElement;
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                var req = t.requestFullscreen || t.webkitRequestFullscreen || t.mozRequestFullScreen;
-                if (req) { req.call(t); return; }
-            } else {
-                var ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
-                if (ex) { ex.call(document); return; }
-            }
-        } catch(e) {}
-        // Fallback: ask parent OS to fullscreen the iframe
-        try { window.parent.postMessage({action: 'sillyos_fullscreen', id: 'minecraft'}, '*'); } catch(e) {}
+        window.open('https://ytsodacan.github.io/minecraft', '_blank');
     }
 
     function onFSChange() {
