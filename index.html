@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cine-OS V2</title>
+  <title>SillyOS</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
   
   
@@ -30,9 +30,9 @@
 
 <section id="boot-layer" aria-label="System Boot Sequence">
   <div id="boot-content">
-    <h1 class="boot-logo">CINE-OS</h1>
-    <p class="boot-sub">Cine-Hub Softwares // V2</p>
-    <button id="boot-btn" onclick="startBootSequence()" tabindex="1">Enter CINE</button>
+    <h1 class="boot-logo">SILLY-OS</h1>
+    <p class="boot-sub">SillyOS // V2</p>
+    <button id="boot-btn" onclick="startBootSequence()" tabindex="1">Enter SillyOS</button>
     <div class="boot__hint">Double-Tap ENTER to skip sequence</div>
   </div>
   <video id="boot-video" playsinline aria-hidden="true"><source src="Videos/Boot.mp4" type="video/mp4"></video>
@@ -175,6 +175,7 @@
 
 <menu id="desktop-context-menu" class="os-context-menu" role="menu">
   <li class="ctx-item" role="menuitem" tabindex="0" onclick="openWallpaperMenu(); document.getElementById('desktop-context-menu').style.display='none';"><i class="fas fa-image fa-fw"></i> Change Wallpaper</li>
+  <li class="ctx-item" role="menuitem" tabindex="0" onclick="openWidgetEditor(); document.getElementById('desktop-context-menu').style.display='none';"><i class="fas fa-th-large fa-fw"></i> Add Widget</li>
   <li class="ctx-separator" role="separator"></li>
   <li class="ctx-row" role="none">
     <button class="ctx-btn" onclick="toggleDesktopSize(true)" title="Large Icons (Hide Names)"><i class="fas fa-expand-arrows-alt"></i></button>
@@ -191,7 +192,7 @@
 <aside id="ciri-window" aria-label="Ciri AI Assistant">
   <div id="ciri-boot-screen">
     <div id="boot-ciri-text" class="boot-ciri">CIRI.</div>
-    <div id="boot-sub-text" class="boot-sub">Cine-Hub SOFTWARES</div>
+    <div id="boot-sub-text" class="boot-sub">SillyOS</div>
     <div id="boot-loader" class="boot-loader">
       <div id="boot-spinner" class="spinner"></div>
       <div id="boot-status-text" class="boot-status">Connecting To Gemini...</div>

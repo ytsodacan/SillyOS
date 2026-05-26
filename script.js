@@ -2,26 +2,13 @@ var _SYSTEM_PATHS = ["C:/Windows/System32/kernel32.dll", "/var/www/html/cine-os/
 var _devBuildVer = "3.0.1";
 
 var APPS = {
-    'cine': {title: 'CINE // HUB', path: 'script/Apps/Cine/index.html', icon: 'https://cdn.worldvectorlogo.com/logos/netflix-logo-icon.svg', pinned: true},
-    'term': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg', pinned: true},
-    'files': {title: 'PS5 Emu', path: 'script/Apps/Ps5/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-OeL_be7RFaoHi3PswkuAR5XcMgBNRDynsg&s', pinned: true},
-    'web': {title: 'Cine-Web', path: 'script/Apps/Web/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSeD89ZcX5W1FBtal7RerasT27q-OmZqnBixQ&s', pinned: true},
-    'settings': {title: 'CONFIG', internal: true, icon: 'https://cdn.iconscout.com/icon/free/png-256/free-apple-settings-icon-svg-download-png-493162.png', pinned: true},
-    'discord': {title: 'Discord', path: 'script/Apps/Discord/index.html', icon: 'https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png', pinned: false},
-    'roblox': {title: 'Roblox', path: 'script/Apps/Roblox/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9KvNyFWMg_bjo_q_1IVLKFWbfCeonn2qDow&s', pinned: false},
-    'android': {title: 'Android', path: 'script/Apps/Android/index.html', icon: 'https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/android-icon.png', pinned: false},
-    'ciniai': {title: 'Cini AI', path: 'script/Apps/Cini/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRkLXhvns5Rrdf-XBNlWcPIRh0hlJfWnEtBWg&s', pinned: false},
-    'VM': {title: 'Windows Virtual-Machine', path: 'script/Apps/VM/index.html', icon: 'https://static1.squarespace.com/static/68e69c83884dc82cc035a923/69454e29c6db7516b2566fca/69454e32c6db7516b256749a/1766149682532/Virtualbox_logo.png?format=original', pinned: false},
-    'crunchyroll': {title: 'CrunchyRoll', path: 'script/Apps/Crunchy/index.html', icon: 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/a0a4547a-06c5-4740-b87a-ca9c4fa0171e/dduaesk-2b3e85d2-3116-4eb5-8260-f413d1fc670e.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9hMGE0NTQ3YS0wNmM1LTQ3NDAtYjg3YS1jYTljNGZhMDE3MWUvZGR1YWVzay0yYjNlODVkMi0zMTE2LTRlYjUtODI2MC1mNDEzZDFmYzY3MGUucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.vReffTSSKpde4w8EwFxz_CttxlLay8fXOq0goYh6rsg', pinned: false},
-    'Geforce': {title: 'GEFORCE NOW', path: 'script/Apps/Geforce/index.html', icon: 'https://play-lh.googleusercontent.com/_-b_HQXrVyyhZSHj_BoE9u_-cxkcHDH_yLX5rDjJsFMIfsCNQs9F3QP4JvEFcWaSIz0=w240-h480-rw', pinned: false},
-    'Fortnite': {title: 'Fortnite', path: 'script/Apps/Fortnite/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShiXrQ-cvZeDyQNPIZCv_hsaUCAe5j_rXJ7Q&s', pinned: false},
-    'RocketL': {title: 'Rocket League', path: 'script/Apps/RocketL/index.html', icon: 'https://ygo-assets-entities-us.yougov.net/87bb7a16-2b62-11e8-82b1-37bb0d207ced.jpg?zcw=518&zch=518&zct=10&zcl=0', pinned: false},
-    'Xbox': {title: 'Xbox', path: 'script/Apps/Xbox/index.html', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRknRQh-WRK4F75YB3EAlfrsqAk66Xjn45sBg&s', pinned: false},
     'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true},
-    'games': {title: 'Games', path: 'script/Apps/Games/index.html', icon: 'https://cdn-icons-png.flaticon.com/512/686/686589.png', pinned: true},
+    'games': {title: 'Games', path: 'script/Apps/Games/index.html', icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23ffffff11"/><text y="46" x="8" font-size="42">🎮</text></svg>', pinned: true, iconWhite: true},
+    'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Chrome_icon_%28February_2022%29.svg/2048px-Google_Chrome_icon_%28February_2022%29.svg.png', pinned: true},
+    'settings': {title: 'Settings', internal: true, icon: 'https://cdn.iconscout.com/icon/free/png-256/free-apple-settings-icon-svg-download-png-493162.png', pinned: true},
 };
 
-var savedPins = localStorage.getItem('c_pins_v2');
+var savedPins = localStorage.getItem('silly_pins_v4');
 if(savedPins) {
     let p = JSON.parse(savedPins);
     for(let k in p) {
@@ -32,7 +19,7 @@ if(savedPins) {
 function syncPins() {
     let obj = {};
     for(let k in APPS) obj[k] = APPS[k].pinned;
-    localStorage.setItem('c_pins_v2', JSON.stringify(obj));
+    localStorage.setItem('silly_pins_v4', JSON.stringify(obj));
 }
 
 var wallpaperRegistry = {
@@ -63,7 +50,7 @@ var wallpaperRegistry = {
     "Desktop": {id: "Desktop", name: "Desktop Lines", url: "Videos/Desktop.mp4", locked: false}
 };
 
-var sysConfig = JSON.parse(localStorage.getItem('cine_sys_config')) || {};
+var sysConfig = JSON.parse(localStorage.getItem('silly_sys_config')) || {};
 if(sysConfig.optBg === undefined) sysConfig.optBg = false;
 if(sysConfig.shortBoot === undefined) sysConfig.shortBoot = true;
 if(sysConfig.wpLoop === undefined) sysConfig.wpLoop = false;
@@ -76,13 +63,13 @@ if(!sysConfig.cloak) sysConfig.cloak = 'none';
 
 window.updateSysSetting = function(key, value) {
     sysConfig[key] = value;
-    localStorage.setItem('cine_sys_config', JSON.stringify(sysConfig));
+    localStorage.setItem('silly_sys_config', JSON.stringify(sysConfig));
     if(key === 'optBg') applySystemSettings();
     if(key === 'wpLoop') updateWallpaperLoop();
 };
 
 var cloaks = {
-    none: {title: "Cine-OS", icon: ""},
+    none: {title: "SillyOS", icon: ""},
     google: {title: "Google", icon: "https://www.google.com/favicon.ico"},
     drive: {title: "My Drive - Google Drive", icon: "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png"},
     canvas: {title: "Dashboard", icon: "https://du11hjcvx0uqb.cloudfront.net/br/dist/images/favicon-e10d657a73.ico"},
@@ -91,7 +78,7 @@ var cloaks = {
 
 window.updateCloak = function(key) {
     sysConfig.cloak = key;
-    localStorage.setItem('cine_sys_config', JSON.stringify(sysConfig));
+    localStorage.setItem('silly_sys_config', JSON.stringify(sysConfig));
     applyCloak();
 };
 
@@ -109,7 +96,7 @@ function applyCloak() {
         n.href = sel.icon;
         document.getElementsByTagName('head')[0].appendChild(n);
     } else {
-        document.title = "Cine-OS";
+        document.title = "SillyOS";
     }
 }
 setInterval(applyCloak, 2000);
@@ -158,8 +145,13 @@ document.addEventListener("DOMContentLoaded", function() {
     applyCloak();
     loadDynamicResources();
     document.getElementById('boot-layer').style.display = 'block';
+    // Clear old Cine desktop layout so no stale icons remain
+    if(!localStorage.getItem('silly_desktop_v2')) {
+        localStorage.removeItem('cine_desktop_v2');
+    }
     loadDesktop();
     updateSidebarData();
+    injectWidgetEditor();
 });
 
 function renderUI() {
@@ -319,7 +311,7 @@ window.unlockSystem = function() {
             if(bV.style.display !== 'none') bV.play().catch(function(e){});
         }
         if(!welcomeShown) {
-            showNotification("Welcome To Cine V2", "Checkout Settings for FAQ!");
+            showNotification("Welcome To SillyOS", "Checkout Settings for FAQ!");
             welcomeShown = true;
         }
     }, 600);
@@ -419,8 +411,11 @@ setInterval(function() {
     }
 }, 1000);
 
-window.launchLastPlayed = function() { toggleApp('files'); };
-window.resumeSpotify = function() { toggleApp('term'); };
+window.launchLastPlayed = function() {
+    let last = localStorage.getItem('silly_last_app');
+    if(last && APPS[last]) toggleApp(last);
+};
+window.resumeSpotify = function() {};
 window.openUpdateLog = function() {
     let u = document.getElementById('update-modal');
     if(u && u.showModal) u.showModal();
@@ -429,15 +424,12 @@ window.openUpdateLog = function() {
 
 function updateSidebarData() {
     try {
-        let ps = JSON.parse(localStorage.getItem('ps_purchased'));
-        if(ps && ps.length > 0) document.getElementById('last-game-name').innerText = "PS5 Library Ready";
-        let sp = JSON.parse(localStorage.getItem('cinify_cache'));
-        if(sp) {
-            let k = Object.keys(sp);
-            if(k.length > 0) {
-                document.getElementById('spotify-track-name').innerText = sp[k[k.length-1]].title || "Liked Song";
-                if(sp[k[k.length-1]].cover) document.getElementById('spotify-album-art').src = sp[k[k.length-1]].cover;
-            }
+        let last = localStorage.getItem('silly_last_app');
+        if(last && APPS[last]) {
+            let el = document.getElementById('last-game-name');
+            let ic = document.getElementById('last-game-icon');
+            if(el) el.innerText = APPS[last].title;
+            if(ic) ic.src = APPS[last].icon;
         }
     } catch(e) {}
 }
@@ -600,7 +592,7 @@ function openWindow(id) {
                     <div class="setting-card">
                         <div class="setting-text"><b>Tab Cloaking</b><small>Disguises OS as another site</small></div>
                         <select id="cloak-select" onchange="window.parent.updateCloak(this.value)">
-                            <option value="none">None (Cine-OS)</option>
+                            <option value="none">None (SillyOS)</option>
                             <option value="google">Google</option>
                             <option value="drive">Google Drive</option>
                             <option value="canvas">Canvas</option>
@@ -703,10 +695,10 @@ dEl.addEventListener('mouseenter', function() { clearTimeout(dockTimer); });
 
 // Header is always visible — immersive mouseover removed
 
-var desktopLayout = JSON.parse(localStorage.getItem('cine_desktop_v2')) || [];
+var desktopLayout = JSON.parse(localStorage.getItem('silly_desktop_v2')) || [];
 
 function saveDesktop() {
-    localStorage.setItem('cine_desktop_v2', JSON.stringify(desktopLayout));
+    localStorage.setItem('silly_desktop_v2', JSON.stringify(desktopLayout));
     loadDesktop();
 }
 
@@ -1010,7 +1002,7 @@ window.toggleDesktopSize = function(l) {
     document.getElementById('desktop-context-menu').style.display = 'none';
 };
 
-var unlockedWallpapers = JSON.parse(localStorage.getItem('cine_unlocked_wp')) || ['default'];
+var unlockedWallpapers = JSON.parse(localStorage.getItem('silly_unlocked_wp')) || ['default'];
 window.wpMode = 'both';
 
 function setWallpaper(k, noti=false) {
@@ -1019,7 +1011,7 @@ function setWallpaper(k, noti=false) {
     
     if(noti && d.locked && !unlockedWallpapers.includes(d.id)) {
         unlockedWallpapers.push(d.id);
-        localStorage.setItem('cine_unlocked_wp', JSON.stringify(unlockedWallpapers));
+        localStorage.setItem('silly_unlocked_wp', JSON.stringify(unlockedWallpapers));
         alert("Wallpaper: [ " + d.name + " ] Unlocked.");
     }
     
@@ -1399,7 +1391,7 @@ function chkFps() {
             fLC++;
             if(fLC >= 5 && !sysConfig.optBg) {
                 sysConfig.optBg = true;
-                localStorage.setItem('cine_sys_config', JSON.stringify(sysConfig));
+                localStorage.setItem('silly_sys_config', JSON.stringify(sysConfig));
                 let bv = document.getElementById('bg-video');
                 let lv = document.getElementById('lock-video');
                 if(bv) bv.pause();
@@ -1416,3 +1408,352 @@ function chkFps() {
     requestAnimationFrame(chkFps);
 }
 requestAnimationFrame(chkFps);
+
+/* ============================================================
+   SILLY-OS WIDGET SYSTEM
+   - No default widgets on desktop
+   - Widget editor dialog lets users add/remove/customize
+   ============================================================ */
+
+var _widgetInstances = JSON.parse(localStorage.getItem('silly_widgets_v1')) || [];
+
+function _saveWidgets() {
+    localStorage.setItem('silly_widgets_v1', JSON.stringify(_widgetInstances));
+}
+
+var WIDGET_DEFS = [
+    {type:'clock',    label:'Clock',          desc:'Live digital clock',       emoji:'🕐', bg:'#4f67d8'},
+    {type:'calendar', label:'Calendar',        desc:'This month at a glance',   emoji:'📅', bg:'#7c5cbf'},
+    {type:'sysmon',   label:'System Monitor',  desc:'CPU & memory meters',      emoji:'📊', bg:'#2a7d4f'},
+    {type:'notes',    label:'Quick Notes',     desc:'Sticky note on your desk', emoji:'📝', bg:'#b07a1a'},
+    {type:'weather',  label:'Weather',         desc:'Current conditions',       emoji:'⛅', bg:'#1a7ba0'}
+];
+
+/* ── Inject the editor dialog & styles into the page ──────── */
+function injectWidgetEditor() {
+    /* Styles */
+    var style = document.createElement('style');
+    style.textContent = `
+    #silly-widget-panel-backdrop {
+        display:none; position:fixed; inset:0; z-index:8000;
+        background:rgba(0,0,0,0.55); backdrop-filter:blur(6px);
+        align-items:center; justify-content:center;
+    }
+    #silly-widget-panel-backdrop.open { display:flex; }
+    #silly-widget-panel {
+        background:#111320; border:1px solid rgba(255,255,255,0.12);
+        border-radius:18px; box-shadow:0 24px 64px rgba(0,0,0,0.7);
+        width:min(560px,96vw); max-height:80vh; display:flex; flex-direction:column;
+        overflow:hidden; font-family:'Rajdhani',sans-serif; color:#e8eaf6;
+    }
+    #silly-widget-panel header {
+        display:flex; align-items:center; justify-content:space-between;
+        padding:18px 22px; border-bottom:1px solid rgba(255,255,255,0.08);
+        flex-shrink:0;
+    }
+    #silly-widget-panel header h2 { font-size:18px; font-weight:700; margin:0; display:flex; align-items:center; gap:10px; }
+    #silly-widget-panel header h2 span { color:#6c8fff; }
+    #swp-close { background:transparent; border:1px solid rgba(255,255,255,0.15); color:#aaa;
+        width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px;
+        display:flex; align-items:center; justify-content:center; transition:all .2s; }
+    #swp-close:hover { color:#ff5f57; border-color:#ff5f57; }
+    #silly-widget-panel .swp-body { overflow-y:auto; padding:20px 22px; flex:1; }
+    #silly-widget-panel .swp-body::-webkit-scrollbar { width:5px; }
+    #silly-widget-panel .swp-body::-webkit-scrollbar-thumb { background:rgba(108,143,255,0.35); border-radius:5px; }
+    .swp-section-title { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(232,234,246,0.4); font-weight:600; margin-bottom:12px; }
+    .swp-catalog { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:24px; }
+    .swp-catalog-item { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
+        border-radius:12px; padding:14px; display:flex; align-items:flex-start; gap:12px;
+        cursor:pointer; transition:all .2s; }
+    .swp-catalog-item:hover { background:rgba(108,143,255,0.12); border-color:rgba(108,143,255,0.35); transform:translateY(-2px); }
+    .swp-cat-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .swp-cat-info strong { display:block; font-size:14px; font-weight:600; }
+    .swp-cat-info small { color:rgba(232,234,246,0.45); font-size:12px; }
+    .swp-active-list { display:flex; flex-direction:column; gap:8px; }
+    .swp-active-row { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
+        border-radius:10px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .swp-active-row span { font-size:14px; }
+    .swp-remove-btn { background:transparent; border:1px solid rgba(255,95,87,0.4); color:#ff5f57;
+        padding:5px 14px; border-radius:8px; cursor:pointer; font-size:12px; font-family:inherit; transition:all .2s; }
+    .swp-remove-btn:hover { background:rgba(255,95,87,0.15); }
+    .swp-empty { color:rgba(232,234,246,0.35); font-size:13px; text-align:center; padding:16px 0; }
+
+    /* Desktop widgets */
+    .silly-desk-widget { position:absolute; z-index:80; user-select:none;
+        border-radius:14px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.55);
+        animation:sillywgtIn .25s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes sillywgtIn { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+    .swgt-bar { height:28px; background:rgba(0,0,0,0.35); border-bottom:1px solid rgba(255,255,255,0.08);
+        display:flex; align-items:center; justify-content:space-between; padding:0 10px;
+        cursor:grab; font-size:11px; color:rgba(232,234,246,0.45); font-family:'Rajdhani',sans-serif; }
+    .swgt-bar:active { cursor:grabbing; }
+    .swgt-x { background:transparent; border:none; color:rgba(232,234,246,0.4); cursor:pointer;
+        font-size:14px; line-height:1; padding:0; transition:color .15s; }
+    .swgt-x:hover { color:#ff5f57; }
+    .swgt-body { background:rgba(12,14,26,0.88); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.09); }
+
+    /* Clock widget */
+    .swgt-clock .swgt-body { padding:14px 20px; text-align:center; min-width:180px; }
+    .swgt-clock-time { font-family:'Orbitron',monospace; font-size:30px; font-weight:700; color:#e8eaf6; letter-spacing:2px; }
+    .swgt-clock-date { font-size:11px; color:rgba(232,234,246,0.45); margin-top:4px; letter-spacing:2px; text-transform:uppercase; }
+
+    /* Calendar widget */
+    .swgt-calendar .swgt-body { padding:12px 16px; min-width:230px; }
+    .swgt-cal-month { font-size:13px; font-weight:700; color:#e8eaf6; margin-bottom:10px; }
+    .swgt-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+    .swgt-cal-grid span { text-align:center; font-size:10px; padding:4px 2px; border-radius:4px; color:rgba(232,234,246,0.45); font-family:'Rajdhani',sans-serif; }
+    .swgt-cal-grid span.swgt-cal-hd { color:#6c8fff; font-weight:700; }
+    .swgt-cal-grid span.swgt-cal-today { background:#6c8fff; color:#fff; border-radius:50%; font-weight:700; }
+
+    /* Sysmon widget */
+    .swgt-sysmon .swgt-body { padding:12px 16px; min-width:200px; display:flex; flex-direction:column; gap:9px; }
+    .swgt-mon-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(232,234,246,0.4); display:block; margin-bottom:4px; font-family:'Rajdhani',sans-serif; }
+    .swgt-mon-bar { height:6px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+    .swgt-mon-fill { height:100%; border-radius:4px; background:#6c8fff; transition:width 1s ease; }
+    .swgt-mon-fill.warn { background:#febc2e; }
+
+    /* Notes widget */
+    .swgt-notes .swgt-body { min-width:220px; }
+    .swgt-notes textarea { width:100%; height:100px; background:transparent; border:none; outline:none;
+        color:#e8eaf6; font-size:13px; font-family:'Rajdhani',sans-serif; line-height:1.6;
+        padding:12px; resize:none; user-select:text; -webkit-user-select:text; }
+
+    /* Weather widget */
+    .swgt-weather .swgt-body { padding:14px 20px; text-align:center; min-width:180px; }
+    .swgt-weather-icon { font-size:34px; margin-bottom:6px; }
+    .swgt-weather-temp { font-family:'Orbitron',monospace; font-size:32px; font-weight:700; color:#e8eaf6; }
+    .swgt-weather-cond { font-size:12px; color:rgba(232,234,246,0.45); margin-top:4px; }
+
+    /* Right-click context menu trigger */
+    #silly-widget-ctx { display:none; position:fixed; z-index:9600;
+        background:rgba(14,16,28,0.96); backdrop-filter:blur(16px);
+        border:1px solid rgba(255,255,255,0.1); border-radius:10px;
+        box-shadow:0 8px 24px rgba(0,0,0,0.5); padding:6px; min-width:180px; }
+    #silly-widget-ctx button { display:flex; align-items:center; gap:10px;
+        width:100%; background:transparent; border:none; padding:9px 12px;
+        border-radius:6px; cursor:pointer; font-size:13px; color:rgba(232,234,246,0.7);
+        font-family:'Rajdhani',sans-serif; text-align:left; transition:all .15s; }
+    #silly-widget-ctx button:hover { background:rgba(255,255,255,0.08); color:#e8eaf6; }
+    `;
+    document.head.appendChild(style);
+
+    /* Backdrop + panel */
+    var bd = document.createElement('div');
+    bd.id = 'silly-widget-panel-backdrop';
+    bd.innerHTML = `
+    <div id="silly-widget-panel">
+        <header>
+            <h2><span>⊞</span> Widget Editor</h2>
+            <button id="swp-close">✕</button>
+        </header>
+        <div class="swp-body">
+            <div class="swp-section-title">Add a Widget</div>
+            <div class="swp-catalog" id="swp-catalog"></div>
+            <div class="swp-section-title">Active Widgets</div>
+            <div class="swp-active-list" id="swp-active"></div>
+        </div>
+    </div>`;
+    document.body.appendChild(bd);
+    bd.addEventListener('click', function(e){ if(e.target===bd) closeWidgetEditor(); });
+    document.getElementById('swp-close').addEventListener('click', closeWidgetEditor);
+
+    /* Right-click ctx for desktop → open widget editor */
+    var dctx = document.getElementById('desktop-context-menu');
+    if(dctx) {
+        var sep = document.createElement('li'); sep.className='ctx-separator'; sep.setAttribute('role','separator');
+        var item = document.createElement('li'); item.className='ctx-item'; item.setAttribute('role','menuitem'); item.setAttribute('tabindex','0');
+        item.innerHTML = '<i class="fas fa-th-large fa-fw"></i> Add Widget';
+        item.onclick = function(){ openWidgetEditor(); dctx.style.display='none'; };
+        dctx.appendChild(sep); dctx.appendChild(item);
+    }
+
+    renderWidgets();
+    _refreshWidgetPanel();
+}
+
+function openWidgetEditor() {
+    _refreshWidgetPanel();
+    document.getElementById('silly-widget-panel-backdrop').classList.add('open');
+}
+function closeWidgetEditor() {
+    document.getElementById('silly-widget-panel-backdrop').classList.remove('open');
+}
+window.openWidgetEditor = openWidgetEditor;
+
+function _refreshWidgetPanel() {
+    var cat = document.getElementById('swp-catalog');
+    var active = document.getElementById('swp-active');
+    if(!cat || !active) return;
+
+    cat.innerHTML = '';
+    WIDGET_DEFS.forEach(function(def) {
+        var div = document.createElement('div');
+        div.className = 'swp-catalog-item';
+        div.innerHTML = '<div class="swp-cat-icon" style="background:'+def.bg+'">'+def.emoji+'</div>' +
+            '<div class="swp-cat-info"><strong>'+def.label+'</strong><small>'+def.desc+'</small></div>';
+        div.onclick = function(){ _addWidget(def.type); };
+        cat.appendChild(div);
+    });
+
+    active.innerHTML = '';
+    if(!_widgetInstances.length) {
+        active.innerHTML = '<div class="swp-empty">No widgets yet — add one above.</div>';
+        return;
+    }
+    _widgetInstances.forEach(function(wi, idx) {
+        var def = WIDGET_DEFS.find(function(d){return d.type===wi.type;}) || {label:wi.type, emoji:'📦'};
+        var row = document.createElement('div');
+        row.className = 'swp-active-row';
+        row.innerHTML = '<span>'+def.emoji+' '+def.label+'</span>' +
+            '<button class="swp-remove-btn" onclick="_removeWidget('+idx+')">Remove</button>';
+        active.appendChild(row);
+    });
+}
+
+function _addWidget(type) {
+    var id = 'w' + Date.now();
+    var offset = _widgetInstances.length * 22;
+    _widgetInstances.push({type:type, id:id, x:120+offset, y:100+offset});
+    _saveWidgets();
+    renderWidgets();
+    _refreshWidgetPanel();
+    closeWidgetEditor();
+}
+
+function _removeWidget(idx) {
+    var wi = _widgetInstances[idx];
+    if(wi) { var el = document.getElementById('swgt-'+wi.id); if(el) el.remove(); }
+    _widgetInstances.splice(idx, 1);
+    _saveWidgets();
+    _refreshWidgetPanel();
+}
+window._removeWidget = _removeWidget;
+
+function renderWidgets() {
+    document.querySelectorAll('.silly-desk-widget').forEach(function(w){w.remove();});
+    _widgetInstances.forEach(function(wi){ _createWidget(wi); });
+}
+
+function _createWidget(wi) {
+    var def = WIDGET_DEFS.find(function(d){return d.type===wi.type;}) || {label:wi.type,emoji:'📦'};
+    var el = document.createElement('div');
+    el.className = 'silly-desk-widget swgt-' + wi.type;
+    el.id = 'swgt-' + wi.id;
+    el.style.left = (wi.x||120)+'px'; el.style.top = (wi.y||120)+'px';
+
+    var body = _buildWidgetBody(wi);
+    el.innerHTML =
+        '<div class="swgt-bar" onmousedown="_widgetDragStart(event,\''+wi.id+'\')">'+
+            '<span>'+def.emoji+' '+def.label+'</span>'+
+            '<button class="swgt-x" onclick="_removeWidgetById(\''+wi.id+'\')">✕</button>'+
+        '</div>'+
+        '<div class="swgt-body">'+body+'</div>';
+
+    document.body.appendChild(el);
+
+    if(wi.type==='clock') _startClockWidget(wi.id);
+    if(wi.type==='sysmon') _startSysmon(wi.id);
+    if(wi.type==='notes') {
+        var ta = el.querySelector('textarea');
+        if(ta) {
+            ta.value = localStorage.getItem('silly_note_'+wi.id)||'';
+            ta.addEventListener('input', function(){ localStorage.setItem('silly_note_'+wi.id, ta.value); });
+            ta.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+        }
+    }
+}
+
+window._removeWidgetById = function(id) {
+    var idx = _widgetInstances.findIndex(function(w){return w.id===id;});
+    if(idx>-1) _removeWidget(idx);
+};
+
+function _buildWidgetBody(wi) {
+    var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    if(wi.type==='clock') {
+        return '<div style="padding:14px 20px;text-align:center">'+
+            '<div class="swgt-clock-time" id="swgt-ct-'+wi.id+'">--:-- --</div>'+
+            '<div class="swgt-clock-date" id="swgt-cd-'+wi.id+'">---</div></div>';
+    }
+    if(wi.type==='calendar') {
+        var now=new Date(), y=now.getFullYear(), m=now.getMonth(), today=now.getDate();
+        var first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+        var g='<div style="padding:12px 16px">'+
+            '<div class="swgt-cal-month">'+MONTHS[m]+' '+y+'</div>'+
+            '<div class="swgt-cal-grid">';
+        ['S','M','T','W','T','F','S'].forEach(function(d){g+='<span class="swgt-cal-hd">'+d+'</span>';});
+        for(var i=0;i<first;i++) g+='<span></span>';
+        for(var d=1;d<=days;d++) g+='<span'+(d===today?' class="swgt-cal-today"':'')+'>'+d+'</span>';
+        return g+'</div></div>';
+    }
+    if(wi.type==='sysmon') {
+        return '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:9px">'+
+            '<div><label class="swgt-mon-lbl">CPU</label><div class="swgt-mon-bar"><div class="swgt-mon-fill" id="swgt-cpu-'+wi.id+'" style="width:30%"></div></div></div>'+
+            '<div><label class="swgt-mon-lbl">RAM</label><div class="swgt-mon-bar"><div class="swgt-mon-fill warn" id="swgt-ram-'+wi.id+'" style="width:55%"></div></div></div>'+
+            '<div><label class="swgt-mon-lbl">NET</label><div class="swgt-mon-bar"><div class="swgt-mon-fill" id="swgt-net-'+wi.id+'" style="width:75%"></div></div></div></div>';
+    }
+    if(wi.type==='notes') {
+        return '<textarea placeholder="Type a note..."></textarea>';
+    }
+    if(wi.type==='weather') {
+        return '<div style="padding:14px 20px;text-align:center">'+
+            '<div class="swgt-weather-icon">⛅</div>'+
+            '<div class="swgt-weather-temp">72°F</div>'+
+            '<div class="swgt-weather-cond">Partly Cloudy</div></div>';
+    }
+    return '';
+}
+
+function _startClockWidget(id) {
+    function tick() {
+        var t = document.getElementById('swgt-ct-'+id);
+        var d = document.getElementById('swgt-cd-'+id);
+        if(!t) return;
+        var now=new Date(), h=now.getHours(), m=now.getMinutes(), s=now.getSeconds();
+        var ampm=h>=12?'PM':'AM', h12=h%12||12, ms=m<10?'0'+m:m;
+        t.textContent = h12+':'+ms+' '+ampm;
+        if(d) {
+            var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            var MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            d.textContent = DAYS[now.getDay()]+', '+MONS[now.getMonth()]+' '+now.getDate();
+        }
+    }
+    tick(); setInterval(tick, 1000);
+}
+
+function _startSysmon(id) {
+    setInterval(function() {
+        var c=document.getElementById('swgt-cpu-'+id);
+        var r=document.getElementById('swgt-ram-'+id);
+        var n=document.getElementById('swgt-net-'+id);
+        if(!c) return;
+        c.style.width = (15+Math.random()*70)+'%';
+        r.style.width = (40+Math.random()*40)+'%';
+        n.style.width = (50+Math.random()*45)+'%';
+    }, 2000);
+}
+
+/* Widget dragging */
+var _wgtDrag = null;
+function _widgetDragStart(e, id) {
+    e.preventDefault();
+    var el = document.getElementById('swgt-'+id);
+    if(!el) return;
+    _wgtDrag = { id:id, el:el,
+        sx:e.clientX, sy:e.clientY,
+        ox:parseFloat(el.style.left)||0, oy:parseFloat(el.style.top)||0 };
+    el.style.zIndex = 300;
+}
+document.addEventListener('mousemove', function(e) {
+    if(!_wgtDrag) return;
+    _wgtDrag.el.style.left = (_wgtDrag.ox + e.clientX - _wgtDrag.sx) + 'px';
+    _wgtDrag.el.style.top  = (_wgtDrag.oy + e.clientY - _wgtDrag.sy) + 'px';
+});
+document.addEventListener('mouseup', function() {
+    if(!_wgtDrag) return;
+    var wi = _widgetInstances.find(function(w){return w.id===_wgtDrag.id;});
+    if(wi) { wi.x=parseFloat(_wgtDrag.el.style.left)||0; wi.y=parseFloat(_wgtDrag.el.style.top)||0; _saveWidgets(); }
+    _wgtDrag.el.style.zIndex = 80;
+    _wgtDrag = null;
+});
+

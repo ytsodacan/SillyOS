@@ -36,16 +36,6 @@
         .mc-sub { color:#555; font-size:11px; letter-spacing:1px; }
 
         #game-frame { position:fixed; inset:40px 0 0 0; border:none; width:100%; height:calc(100% - 40px); background:#000; display:block; }
-
-        #fs-btn {
-            position:fixed; bottom:12px; right:12px; z-index:200;
-            background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.14);
-            color:#ccc; padding:6px 12px; border-radius:7px; cursor:pointer;
-            font-size:12px; display:none; align-items:center; gap:5px; user-select:none;
-        }
-        #fs-btn.ready { display:flex; opacity:0.5; }
-        #fs-btn.ready:hover { opacity:1; }
-        #fs-btn svg { width:14px; height:14px; fill:currentColor; flex-shrink:0; }
     </style>
 </head>
 <body>
@@ -69,12 +59,6 @@
     referrerpolicy="no-referrer">
 </iframe>
 
-<button id="fs-btn" onclick="toggleFS()" title="Fullscreen">
-    <svg id="ico-expand"   viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-    <svg id="ico-compress" viewBox="0 0 24 24" style="display:none"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
-    Fullscreen
-</button>
-
 <script>
     setTimeout(function() {
         var loader = document.getElementById('loader');
@@ -82,7 +66,6 @@
         setTimeout(function() {
             loader.style.display = 'none';
             document.getElementById('game-frame').src = 'https://ytsodacan.github.io/minecraft';
-            document.getElementById('fs-btn').classList.add('ready');
             document.getElementById('fs-nav-btn').style.display = 'flex';
         }, 420);
     }, 1700);
@@ -107,8 +90,8 @@
 
     function onFSChange() {
         var inFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
-        document.getElementById('ico-expand').style.display   = inFS ? 'none'  : 'block';
-        document.getElementById('ico-compress').style.display = inFS ? 'block' : 'none';
+        var btn = document.getElementById('fs-nav-btn');
+        if(btn) btn.textContent = inFS ? '⛶ Exit Fullscreen' : '⛶ Fullscreen';
     }
     document.addEventListener('fullscreenchange',       onFSChange);
     document.addEventListener('webkitfullscreenchange', onFSChange);
