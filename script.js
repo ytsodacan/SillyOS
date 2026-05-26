@@ -3,8 +3,9 @@ var _devBuildVer = "3.0.1";
 
 var APPS = {
     'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true},
-    'games': {title: 'Games', path: 'script/Apps/Games/index.html', icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23ffffff11"/><text y="46" x="8" font-size="42">🎮</text></svg>', pinned: true, iconWhite: true},
+    'games': {title: 'Games', path: 'script/Apps/Games/index.html', icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23ffffff11"/><text y="46" x="8" font-size="42">🎮</text></svg>', pinned: true},
     'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Chrome_icon_%28February_2022%29.svg/2048px-Google_Chrome_icon_%28February_2022%29.svg.png', pinned: true},
+    'spotify': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg', pinned: true},
     'settings': {title: 'Settings', internal: true, icon: 'https://cdn.iconscout.com/icon/free/png-256/free-apple-settings-icon-svg-download-png-493162.png', pinned: true},
 };
 
@@ -1757,3 +1758,23 @@ document.addEventListener('mouseup', function() {
     _wgtDrag = null;
 });
 
+
+/* ── FULLSCREEN MESSAGE HANDLER ─────────────────────────────
+   Minecraft (and any app) can postMessage to request fullscreen
+   on its iframe, bypassing nested-iframe restrictions.
+   ─────────────────────────────────────────────────────────── */
+window.addEventListener('message', function(e) {
+    if (!e.data || e.data.action !== 'sillyos_fullscreen') return;
+    var id = e.data.id || '';
+    var frame = document.getElementById('frame-' + id);
+    if (!frame) return;
+    try {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            var req = frame.requestFullscreen || frame.webkitRequestFullscreen || frame.mozRequestFullScreen;
+            if (req) req.call(frame);
+        } else {
+            var ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+            if (ex) ex.call(document);
+        }
+    } catch(err) { console.warn('SillyOS fullscreen error:', err); }
+});

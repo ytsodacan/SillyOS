@@ -78,14 +78,21 @@
         document.getElementById('game-frame').src = 'about:blank';
     }
 
-    // Fullscreen targets documentElement — works correctly from inside nested iframes
+    // Send fullscreen request to the parent OS window (works from inside nested iframes)
     function toggleFS() {
-        var t = document.documentElement;
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            (t.requestFullscreen || t.webkitRequestFullscreen || t.mozRequestFullScreen).call(t);
-        } else {
-            (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen).call(document);
-        }
+        try {
+            // Try direct approach first (works if not nested)
+            var t = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                var req = t.requestFullscreen || t.webkitRequestFullscreen || t.mozRequestFullScreen;
+                if (req) { req.call(t); return; }
+            } else {
+                var ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+                if (ex) { ex.call(document); return; }
+            }
+        } catch(e) {}
+        // Fallback: ask parent OS to fullscreen the iframe
+        try { window.parent.postMessage({action: 'sillyos_fullscreen', id: 'minecraft'}, '*'); } catch(e) {}
     }
 
     function onFSChange() {
