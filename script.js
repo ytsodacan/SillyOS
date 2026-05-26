@@ -4,7 +4,7 @@ var _devBuildVer = "3.0.1";
 var APPS = {
     'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true, openMode: "iframe"   // or "newtab" or "redirect"
 },
-    'games': {title: 'Game Library', path: 'script/Apps/Games/index.html', icon: 'script/Apps/Games/icon.png', pinned: true, openMode: "newtab"   // or "newtab" or "redirect"},
+    'games': {title: 'Game Library', path: 'script/Apps/Games/index.html', icon: 'script/Apps/Games/icon.png', pinned: true, openMode: "newtab"},   // or "newtab" or "redirect"},
     'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Chrome_icon_%28February_2022%29.svg/2048px-Google_Chrome_icon_%28February_2022%29.svg.png', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
 },
     'spotify': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
