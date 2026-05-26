@@ -839,3 +839,28 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
   font-size: 1.2rem; font-weight: bold; outline: none; border-radius: 4px;
 }
 .config__input-sm:focus, .config__select:focus { border-color: #888; }
+
+/* Windowed mode for apps that don't need fullscreen */
+.window.windowed {
+    inset: unset;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 860px;
+    height: 600px;
+    max-width: 95vw;
+    max-height: 90vh;
+    border-radius: 10px;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+    overflow: hidden;
+    resize: both;
+}
+.window.windowed.active {
+    transform: translate(-50%, -50%) scale(1);
+}
+.window.windowed.minimized {
+    transform: translate(-50%, 120%) scale(0.5);
+    opacity: 0;
+    pointer-events: none;
+}
