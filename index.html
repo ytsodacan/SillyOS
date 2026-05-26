@@ -61,49 +61,40 @@
 
 <!-- TOP HUD BAR -->
 <header id="hud-top">
-  <div class="hud-left">
-    <div class="hud-day" id="lbl-day">FRIDAY</div>
-  </div>
-  <div class="hud-center">
-    <div class="hud-clock" id="hud-clock">12:00</div>
-  </div>
-  <div class="hud-right">
-    <div class="hud-pill" id="hud-battery"><i class="fas fa-battery-three-quarters"></i> <span id="bat-val">100%</span></div>
-    <div class="hud-pill" id="hud-wifi"><i class="fas fa-wifi"></i></div>
-    <div class="hud-pill" id="hud-vol" onclick="toggleVolPanel()"><i class="fas fa-volume-up"></i></div>
-  </div>
+  <div class="hud-day" id="lbl-day">FRIDAY</div>
 </header>
 
 <!-- RIGHT SIDEBAR -->
-<aside id="right-sidebar" aria-label="Info Panel">
+<aside id="right-sidebar" aria-label="Quick Access Widget">
   <section class="sidebar__section">
-    <h3 class="sidebar__title">Quick Launch</h3>
+    <h3 class="sidebar__title">Jump Back In!</h3>
     <div class="sidebar__card" id="last-played-game" onclick="launchLastPlayed()" role="button" tabindex="0">
-      <img id="last-game-icon" src="https://cdn-icons-png.flaticon.com/512/732/732244.png" alt="Game">
+      <img id="last-game-icon" src="https://cdn-icons-png.flaticon.com/512/732/732244.png" alt="Game Icon">
       <div class="sidebar__info">
-        <strong id="last-game-name">No Recent App</strong>
-        <small>Last opened</small>
+        <strong id="last-game-name">No Recent Game</strong>
+        <small>PS5 Emu</small>
       </div>
+    </div>
+  </section>
+  <section class="sidebar__section">
+    <h3 class="sidebar__title">Quick Play</h3>
+    <div class="sidebar__card" id="spotify-quick-play" onclick="toggleApp('term')" role="button" tabindex="0">
+      <img id="spotify-album-art" src="https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg" alt="Album Cover">
+      <div class="sidebar__info">
+        <strong id="spotify-track-name">Not Playing</strong>
+        <small>Spotify</small>
+      </div>
+      <i class="fas fa-play play-overlay"></i>
     </div>
   </section>
   <section class="sidebar__section">
     <h3 class="sidebar__title">System Status</h3>
     <div class="sidebar__card update-card" onclick="openUpdateLog()" role="button" tabindex="0">
       <div class="sidebar__info">
-        <strong class="txt-highlight">SillyOS v4.0</strong>
-        <small>View update log</small>
+        <strong class="txt-highlight">Update Log</strong>
+        <small>View latest patches</small>
       </div>
       <i class="fas fa-chevron-right sidebar__chevron"></i>
-    </div>
-  </section>
-  <section class="sidebar__section">
-    <h3 class="sidebar__title">Widgets</h3>
-    <div class="sidebar__card" onclick="openWidgetPanel()" role="button" tabindex="0">
-      <div class="sidebar__info">
-        <strong>Add Widget</strong>
-        <small>Customize your desktop</small>
-      </div>
-      <i class="fas fa-plus sidebar__chevron"></i>
     </div>
   </section>
 </aside>
