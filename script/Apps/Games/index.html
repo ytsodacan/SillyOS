@@ -1,200 +1,243 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>UGS Files</title>
+    <title>Games</title>
+    <meta charset="UTF-8">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #2e3244 0%, #36224b 100%);
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            display: flex;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: linear-gradient(135deg, #2e3244 0%, #36224b 100%); font-family: Arial, sans-serif; }
+
+        /* ── NAV BAR (always visible) ─────────────────────── */
+        #nav-bar {
+            position: fixed; top: 0; left: 0; right: 0; height: 42px;
+            background: rgba(0,0,0,0.45); backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 8px; padding: 0 12px;
+            z-index: 9999;
+        }
+        #nav-bar button {
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+            color: white; padding: 5px 14px; border-radius: 6px; cursor: pointer;
+            font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            transition: background 0.2s;
+        }
+        #nav-bar button:hover { background: rgba(255,255,255,0.22); }
+        #nav-bar button:disabled { opacity: 0.35; cursor: default; }
+        #nav-url {
+            flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+            color: rgba(255,255,255,0.7); padding: 5px 10px; border-radius: 6px; font-size: 12px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 80px;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 20px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        /* ── GAME VIEWER (iframe overlay) ────────────────── */
+        #game-viewer {
+            position: fixed; inset: 42px 0 0 0;
+            display: none; flex-direction: column; z-index: 9998;
+            background: #000;
+        }
+        #game-viewer.open { display: flex; }
+        #game-iframe {
+            flex: 1; border: none; width: 100%; height: 100%;
+            background: #000;
+        }
+
+        /* ── GAME LIST (scrollable under nav) ────────────── */
+        #game-list-wrap {
+            position: fixed; inset: 42px 0 0 80px;
             overflow-y: auto;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-            z-index: 1000;
         }
 
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
+        /* ── SIDEBAR ──────────────────────────────────────── */
+        .sidebar {
+            position: fixed; left: 0; top: 42px; bottom: 0; width: 80px;
+            background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);
+            padding: 10px 5px; display: flex; flex-direction: column;
+            gap: 8px; overflow-y: auto; z-index: 100;
         }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
-        }
-
         .sidebar-btn {
-            background: rgb(89, 134, 218);
-            border: none;
-            padding: 12px;
-            font-size: 18px;
-            font-weight: 700;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: white;
-            text-align: center;
-            min-height: 45px;
+            background: rgb(89,134,218); border: none; padding: 10px 4px;
+            font-size: 15px; font-weight: 700; border-radius: 8px;
+            cursor: pointer; color: white; text-align: center; min-height: 40px;
+            transition: all 0.2s;
         }
+        .sidebar-btn:hover { background: #79aadb; transform: scale(1.05); }
 
-        .sidebar-btn:hover {
-            background: #79aadb;
-            transform: scale(1.05);
-        }
+        /* ── MAIN CONTENT ─────────────────────────────────── */
+        .main-content { padding: 20px 20px 20px 20px; }
+        h1 { color: white; text-align: center; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .letter-section { margin-bottom: 40px; padding: 0 20px; max-width: 900px; margin-left: auto; margin-right: auto; }
+        .letter-header { color: white; font-size: 32px; font-weight: bold; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid rgba(255,255,255,0.3); text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .buttons-container { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 
-        .sidebar-btn.empty {
-            opacity: 0.4;
-            cursor: default;
-        }
-
-        .sidebar-btn.empty:hover {
-            transform: none;
-            background: rgb(89, 134, 218);
-        }
-
-        .main-content {
-            margin-left: 100px;
-            flex: 1;
-            padding: 20px;
-        }
-
-        h1 {
-            color: white;
-            text-align: center;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .letter-section {
-            margin-bottom: 40px;
-            padding: 0 20px;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-            min-height: 100px;
-        }
-
-        .letter-section.empty {
-            opacity: 0.5;
-        }
-
-        .letter-header {
-            color: white;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid rgba(255,255,255,0.3);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .buttons-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .empty-message {
-            color: rgba(255,255,255,0.6);
-            font-style: italic;
-            text-align: center;
-            padding: 20px;
-        }
-
+        /* intercept buttons rendered by games.js */
         input[type="button"] {
-            background: rgb(89, 134, 218);
-            border: none;
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            width: 100%;
-            max-width: 600px;
-            color: white;
-            text-align: left;
+            background: rgb(89,134,218); border: none; padding: 15px 30px;
+            font-size: 16px; font-weight: 500; border-radius: 8px;
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease; width: 100%; max-width: 600px;
+            color: white; text-align: left;
         }
+        input[type="button"]:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); background: #79aadb; }
+        input[type="button"]:active { transform: translateY(0); }
 
-        input[type="button"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-            background: #79aadb;
-        }
-
-        input[type="button"]:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 60px;
-                padding: 15px 5px;
-            }
-            .sidebar-btn {
-                padding: 8px;
-                font-size: 16px;
-            }
-            .main-content {
-                margin-left: 70px;
-            }
-        }
+        a { color: #79aadb; }
+        #searchInput { padding: 13px; width: 100%; max-width: 420px; border-radius: 8px; border: none; box-shadow: 0 2px 4px rgba(7,105,218,0.1); }
+        #lolbutton { background: rgba(89,134,218,0.5); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
+        h2 { color: white; text-align: center; margin-bottom: 20px; font-weight: normal; font-size: 18px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        @media (max-width: 768px) { .sidebar { width: 60px; } #game-list-wrap { left: 60px; } }
     </style>
 </head>
 <body>
-    <div class="sidebar" id="sidebar">
-    </div>
 
+<!-- Navigation bar -->
+<div id="nav-bar">
+    <button id="btn-back" onclick="goBack()" disabled>&#8592; Back</button>
+    <div id="nav-url">Games Library</div>
+    <button id="btn-fs" onclick="toggleFullscreen()" style="display:none">⛶ Fullscreen</button>
+</div>
+
+<!-- Game iframe viewer -->
+<div id="game-viewer">
+    <iframe id="game-iframe"
+        allowfullscreen
+        allow="autoplay; fullscreen; gamepad; pointer-lock; clipboard-read; clipboard-write"
+        referrerpolicy="no-referrer"
+        src="about:blank">
+    </iframe>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar"></div>
+
+<!-- Game list (rendered by external script) -->
+<div id="game-list-wrap">
     <div class="main-content">
         <h1>UGS Files</h1>
-    <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
-    Files from 
-    <a href="https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/" 
-        target="_blank" 
-        style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
-        Ultimate Game Stash Google Doc
-    </a>
-    </h2>
-    <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
-    Discord Server:
-    <a href="https://discord.gg/rmVsAqkpkA" 
-        target="_blank" 
-        style="display: inline; color: #79aadb; text-decoration: none; font-size: 18px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
-        https://discord.gg/rmVsAqkpkA
-    </a>
-    <h2 style="color: white; text-align: center; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: normal; font-size: 18px;">
-        <input type="text" placeholder="Search..." id="searchInput" style="padding: 13px; width: 100%; max-width: 420px; border-radius: 8px; border: none; box-shadow: 0 2px 4px rgba(7, 105, 218, 0.1);">
-        <script src="https://cdn.jsdelivr.net/gh/mcgee1717/994894838923761723@main/searchbut.js"></script>
-    <button id="lolbutton" onclick="const script = document.createElement('script');script.src = 'https://cdn.jsdelivr.net/gh/mcgee1717/994894838923761723@latest/games.js';document.body.appendChild(script);">Click to load if it isnt loading</button>
-    </h2>
-
-        
-        <div id="sections-container"> 
-        </div>
+        <h2>Files from <a href="#" onclick="loadGame('https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/');return false;">Ultimate Game Stash Google Doc</a></h2>
+        <h2>Discord: <a href="#" onclick="loadGame('https://discord.gg/rmVsAqkpkA');return false;">discord.gg/rmVsAqkpkA</a></h2>
+        <h2>
+            <input type="text" placeholder="Search..." id="searchInput" style="padding:13px;width:100%;max-width:420px;border-radius:8px;border:none;">
+            <script src="https://cdn.jsdelivr.net/gh/mcgee1717/994894838923761723@main/searchbut.js"></script>
+            <button id="lolbutton" onclick="const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/mcgee1717/994894838923761723@latest/games.js';document.body.appendChild(s);">Click to reload if not loading</button>
+        </h2>
+        <div id="sections-container"></div>
     </div>
-    <script src="https://cdn.jsdelivr.net/gh/mcgee1717/994894838923761723@
-49119bc/games.js"></script>
-   </body>
-   </html> 
+</div>
+
+<script>
+    /* ── Game loader ──────────────────────────────────────── */
+    function loadGame(url) {
+        if (!url || url === '#' || url === 'about:blank') return;
+        document.getElementById('game-iframe').src = url;
+        document.getElementById('game-viewer').classList.add('open');
+        document.getElementById('nav-url').textContent = url;
+        document.getElementById('btn-back').disabled = false;
+        document.getElementById('btn-fs').style.display = 'flex';
+    }
+
+    function goBack() {
+        document.getElementById('game-viewer').classList.remove('open');
+        document.getElementById('game-iframe').src = 'about:blank';
+        document.getElementById('nav-url').textContent = 'Games Library';
+        document.getElementById('btn-back').disabled = true;
+        document.getElementById('btn-fs').style.display = 'none';
+        if (document.fullscreenElement) document.exitFullscreen();
+    }
+
+    function toggleFullscreen() {
+        var el = document.getElementById('game-viewer');
+        if (!document.fullscreenElement) {
+            el.requestFullscreen && el.requestFullscreen();
+        } else {
+            document.exitFullscreen && document.exitFullscreen();
+        }
+    }
+
+    /* ── Intercept ALL navigation attempts ───────────────── */
+    // Override window.open so games.js can't pop new tabs
+    window.open = function(url) { loadGame(url); return null; };
+
+    // Intercept any <a target="_blank"> or button onclick navigations
+    document.addEventListener('click', function(e) {
+        // anchor tags
+        var a = e.target.closest('a');
+        if (a && a.href && a.href !== '#' && !a.href.startsWith('javascript')) {
+            e.preventDefault();
+            loadGame(a.href);
+            return;
+        }
+        // input[type=button] — games.js uses onclick with window.location
+        var btn = e.target.closest('input[type="button"]');
+        if (btn) {
+            // capture any navigation triggered by the onclick
+            var origAssign = window.location.assign.bind(window.location);
+            var origReplace = window.location.replace.bind(window.location);
+        }
+    }, true); // capture phase
+
+    // Override location.assign / href setter to intercept
+    var _locDesc = Object.getOwnPropertyDescriptor(window, 'location');
+    try {
+        var _origHref = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
+        var _origAssign = window.location.assign;
+        // Wrap assign
+        window.location.assign = function(url) { loadGame(url); };
+    } catch(e) {}
+
+    /* ── Sidebar letter-nav ───────────────────────────────── */
+    function buildSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        sidebar.innerHTML = letters.map(function(l) {
+            return '<button class="sidebar-btn" onclick="scrollToLetter(\'' + l + '\')">' + l + '</button>';
+        }).join('');
+    }
+
+    function scrollToLetter(letter) {
+        var sections = document.querySelectorAll('.letter-section');
+        for (var i = 0; i < sections.length; i++) {
+            var h = sections[i].querySelector('.letter-header');
+            if (h && h.textContent.trim().toUpperCase().startsWith(letter)) {
+                sections[i].scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+        }
+    }
+
+    buildSidebar();
+
+    /* ── Load external games.js ───────────────────────────── */
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/gh/mcgee1717/994894838923761723@49119bc/games.js';
+    document.body.appendChild(s);
+
+    /* ── After games.js loads, patch any onclick handlers ─── */
+    // Poll and patch: games.js buttons use onclick="window.location.href='...'"
+    // We intercept by overriding window.location's href setter
+    function patchGameButtons() {
+        var buttons = document.querySelectorAll('input[type="button"]');
+        buttons.forEach(function(btn) {
+            if (btn._patched) return;
+            btn._patched = true;
+            var origOnclick = btn.onclick;
+            btn.onclick = null;
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                // Extract URL from the original onclick string
+                var onclickStr = (origOnclick || '').toString();
+                var match = onclickStr.match(/['"`]?(https?:\/\/[^'"`\s)]+)['"`]?/);
+                if (match) { loadGame(match[1]); }
+                else if (origOnclick) {
+                    // Let it run but intercept via window.open override
+                    try { origOnclick.call(btn, e); } catch(ex) {}
+                }
+            }, true);
+        });
+    }
+
+    // Patch immediately and after a delay for dynamically added buttons
+    setInterval(patchGameButtons, 800);
+</script>
+</body>
+</html>
