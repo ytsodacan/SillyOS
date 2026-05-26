@@ -9,7 +9,7 @@ var APPS = {
     'settings': {title: 'Settings', internal: true, icon: 'https://cdn.iconscout.com/icon/free/png-256/free-apple-settings-icon-svg-download-png-493162.png', pinned: true},
 };
 
-var savedPins = localStorage.getItem('silly_pins_v4');
+var savedPins = localStorage.getItem('silly_pins_v5');
 if(savedPins) {
     let p = JSON.parse(savedPins);
     for(let k in p) {
@@ -20,7 +20,7 @@ if(savedPins) {
 function syncPins() {
     let obj = {};
     for(let k in APPS) obj[k] = APPS[k].pinned;
-    localStorage.setItem('silly_pins_v4', JSON.stringify(obj));
+    localStorage.setItem('silly_pins_v5', JSON.stringify(obj));
 }
 
 var wallpaperRegistry = {
