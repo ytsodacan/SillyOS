@@ -512,20 +512,42 @@ function openWindow(id) {
         m.classList.remove('open');
         setTimeout(function(){ m.style.display='none'; }, 300);
     }
-    
+
     let layer = document.getElementById('windows-layer');
     let win = document.getElementById('win-' + id);
-    
+
     if(!win) {
         let dat = APPS[id] || {title: 'APP', path: 'about:blank'};
         win = document.createElement('div');
         win.id = 'win-' + id;
-        win.className = 'window active header-visible' + (dat.windowed ? ' windowed' : '');
+        win.className = 'window active';
         win.style.zIndex = ++highestZ;
-        
-        let iframeStr = dat.internal ? '<iframe id="frame-' + id + '"></iframe>' : '<iframe id="frame-' + id + '" src="' + dat.path + '"></iframe>';
-        
-        win.innerHTML = '<div class="win-header" onmousedown="DragSystem.startWinDrag(event, \'' + id + '\')"><div class="win-title">' + dat.title + '</div><div class="win-controls"><div class="win-btn btn-min" onclick="minimizeWindow(\'' + id + '\')"></div><div class="win-btn btn-close" onclick="closeWindow(\'' + id + '\')"></div></div></div><div class="win-body">' + iframeStr + '</div>';
+
+        // Size and center with cascade offset
+        var openCount = document.querySelectorAll('.window').length;
+        var cascade = (openCount % 6) * 28;
+        var ww = Math.min(960, window.innerWidth * 0.92);
+        var wh = Math.min(660, window.innerHeight * 0.88);
+        var lft = Math.max(0, (window.innerWidth - ww) / 2 + cascade);
+        var top = Math.max(0, (window.innerHeight - wh) / 2 + cascade);
+        win.style.width  = ww + 'px';
+        win.style.height = wh + 'px';
+        win.style.left   = lft + 'px';
+        win.style.top    = top + 'px';
+
+        var iconHtml = dat.icon ? '<img class="win-icon" src="' + dat.icon + '" alt="">' : '';
+        var iframeStr = dat.internal ? '<iframe id="frame-' + id + '"></iframe>' : '<iframe id="frame-' + id + '" src="' + dat.path + '"></iframe>';
+
+        win.innerHTML =
+            '<div class="win-header" onmousedown="DragSystem.startWinDrag(event,\'' + id + '\')" ondblclick="toggleMaximizeWindow(\'' + id + '\')">' +
+                '<div class="win-title-row">' + iconHtml + '<span class="win-title">' + dat.title + '</span></div>' +
+                '<div class="win-controls">' +
+                    '<div class="win-btn btn-min" onclick="event.stopPropagation();minimizeWindow(\'' + id + '\')" title="Minimize"></div>' +
+                    '<div class="win-btn btn-max" onclick="event.stopPropagation();toggleMaximizeWindow(\'' + id + '\')" title="Maximize / Restore"></div>' +
+                    '<div class="win-btn btn-close" onclick="event.stopPropagation();closeWindow(\'' + id + '\')" title="Close"></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="win-body">' + iframeStr + '</div>';
         
         layer.appendChild(win);
         
@@ -608,7 +630,6 @@ function openWindow(id) {
     }
     
     activeWindowId = id;
-    startImmersiveMode(win);
 }
 
 function closeWindow(id) {
@@ -616,6 +637,25 @@ function closeWindow(id) {
     if(w) w.remove();
     if(activeWindowId === id) activeWindowId = null;
     endImmersiveMode();
+}
+
+function toggleMaximizeWindow(id) {
+    var win = document.getElementById('win-' + id);
+    if(!win) return;
+    if(win.classList.contains('maximized')) {
+        win.classList.remove('maximized');
+        // Restore saved size/position
+        if(win._savedRect) {
+            win.style.left   = win._savedRect.left;
+            win.style.top    = win._savedRect.top;
+            win.style.width  = win._savedRect.width;
+            win.style.height = win._savedRect.height;
+        }
+    } else {
+        // Save current size/position
+        win._savedRect = { left: win.style.left, top: win.style.top, width: win.style.width, height: win.style.height };
+        win.classList.add('maximized');
+    }
 }
 
 function minimizeWindow(id) {
@@ -629,8 +669,8 @@ function minimizeWindow(id) {
 }
 
 function startImmersiveMode(win) {
+    // Dock auto-hides when a window is active; header stays visible
     document.getElementById('dock-container').classList.add('dock-hidden');
-    win.classList.remove('header-visible');
 }
 
 function endImmersiveMode() {
@@ -660,24 +700,7 @@ dEl.addEventListener('mouseleave', function() {
 });
 dEl.addEventListener('mouseenter', function() { clearTimeout(dockTimer); });
 
-document.getElementById('top-trigger').addEventListener('mouseenter', function() {
-    if(activeWindowId) {
-        let w = document.getElementById('win-' + activeWindowId);
-        if(w && !w.classList.contains('minimized')) w.classList.add('header-visible');
-    }
-});
-
-document.addEventListener('mouseover', function(e) {
-    if(e.target.closest('.win-header')) {
-        if(activeWindowId) {
-            let w = document.getElementById('win-' + activeWindowId);
-            if(w) w.classList.add('header-visible');
-        }
-    } else if(activeWindowId && !e.target.closest('#top-trigger')) {
-        let w = document.getElementById('win-' + activeWindowId);
-        if(w) w.classList.remove('header-visible');
-    }
-});
+// Header is always visible — immersive mouseover removed
 
 var desktopLayout = JSON.parse(localStorage.getItem('cine_desktop_v2')) || [];
 
@@ -875,9 +898,18 @@ var DragSystem = {
     },
     
     startWinDrag: function(e, id) {
+        var win = document.getElementById('win-' + id);
+        if(!win || win.classList.contains('maximized')) return;
+        e.preventDefault();
         this.startPos = {x: e.clientX, y: e.clientY};
-        this.sourceType = 'window'; this.sourceEl = document.getElementById('win-' + id);
+        this.sourceType = 'window';
+        this.sourceEl = win;
+        this.winStartLeft = parseFloat(win.style.left) || 0;
+        this.winStartTop  = parseFloat(win.style.top)  || 0;
         this.isDragMove = false;
+        // Bring to front
+        win.style.zIndex = ++highestZ;
+        activeWindowId = id;
     },
     
     move: function(e) {
@@ -887,7 +919,12 @@ var DragSystem = {
         
         if(dx > 3 || dy > 3) {
             this.dragging = true; this.isDragMove = true;
-            if(this.sourceType === 'desktop' || this.sourceType === 'drawer' || this.sourceType === 'dock') {
+            if(this.sourceType === 'window') {
+                var newLeft = this.winStartLeft + (e.clientX - this.startPos.x);
+                var newTop  = Math.max(0, this.winStartTop  + (e.clientY - this.startPos.y));
+                this.sourceEl.style.left = newLeft + 'px';
+                this.sourceEl.style.top  = newTop  + 'px';
+            } else if(this.sourceType === 'desktop' || this.sourceType === 'drawer' || this.sourceType === 'dock') {
                 if(this.sourceType === 'drawer') toggleAppDrawer();
                 this.proxy.style.display = 'block';
                 this.proxy.style.left = (e.clientX - 25) + 'px';
