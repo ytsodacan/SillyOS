@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
 @font-face {
-    font-family: 'Orbitron';
+    font-family: 'Azonix';
     src: url('https://db.onlinewebfonts.com/t/04e1f7fb2b58d60eb24df50a9807fa36.woff2') format('woff2'),
          local('Orbitron'), local(':root {
-
+    --font-header: 'Azonix', 'Orbitron', sans-serif;
     /* keep all the rest of your :root vars unchanged */
 }
 
@@ -903,4 +903,3 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
   font-size: 1.2rem; font-weight: bold; outline: none; border-radius: 4px;
 }
 .config__input-sm:focus, .config__select:focus { border-color: #888; }
-
