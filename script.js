@@ -556,7 +556,10 @@ if (dat.openMode === "newtab") {
                     '<div class="win-btn btn-close" onclick="event.stopPropagation();closeWindow(\'' + id + '\')" title="Close"></div>' +
                 '</div>' +
             '</div>' +
-            '<div class="win-body">' + iframeStr + '</div>';
+            '<div class="win-body">' + iframeStr + '</div>' +
+            '<div class="win-resize-handle" onmousedown="DragSystem.startWinResize(event,\'' + id + '\')" title="Resize">' +
+                '<svg viewBox="0 0 10 10"><path d="M2 10 L10 10 L10 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>' +
+            '</div>';
         
         layer.appendChild(win);
         
@@ -928,6 +931,13 @@ var DragSystem = {
         
         if(dx > 3 || dy > 3) {
             this.dragging = true; this.isDragMove = true;
+            if(this.resizing) {
+                var nw = Math.max(300, this.resizeStartW + (e.clientX - this.resizeStartX));
+                var nh = Math.max(200, this.resizeStartH + (e.clientY - this.resizeStartY));
+                this.resizeEl.style.width  = nw + 'px';
+                this.resizeEl.style.height = nh + 'px';
+                return;
+            }
             if(this.sourceType === 'window') {
                 var newLeft = this.winStartLeft + (e.clientX - this.startPos.x);
                 var newTop  = Math.max(0, this.winStartTop  + (e.clientY - this.startPos.y));
@@ -955,7 +965,24 @@ var DragSystem = {
         }
     },
     
+    startWinResize: function(e, id) {
+        var win = document.getElementById('win-' + id);
+        if(!win || win.classList.contains('maximized')) return;
+        e.preventDefault(); e.stopPropagation();
+        this.resizing = true;
+        this.resizeId = id;
+        this.resizeEl = win;
+        this.resizeStartX = e.clientX;
+        this.resizeStartY = e.clientY;
+        this.resizeStartW = win.offsetWidth;
+        this.resizeStartH = win.offsetHeight;
+        win.style.zIndex = ++highestZ;
+    },
+
     end: function(e) {
+        if(this.resizing) {
+            this.resizing = false; this.resizeEl = null;
+        }
         if(!this.sourceEl) return;
         if(!this.isDragMove && this.sourceType === 'desktop') { this.reset(); return; }
         if(!this.dragging) { this.reset(); return; }
@@ -1427,133 +1454,249 @@ requestAnimationFrame(chkFps);
 
 /* ============================================================
    SILLY-OS WIDGET SYSTEM
-   - No default widgets on desktop
-   - Widget editor dialog lets users add/remove/customize
+   - Widgets v2: draggable, resizable, configurable
+   - More widget types, weather with location
+   - Window resize handles
    ============================================================ */
 
-var _widgetInstances = JSON.parse(localStorage.getItem('silly_widgets_v1')) || [];
+var _widgetInstances = JSON.parse(localStorage.getItem('silly_widgets_v2')) || [];
 
 function _saveWidgets() {
-    localStorage.setItem('silly_widgets_v1', JSON.stringify(_widgetInstances));
+    localStorage.setItem('silly_widgets_v2', JSON.stringify(_widgetInstances));
+    // Update sidebar counters
+    var wc = document.getElementById('sb-wgtcount');
+    var wl = document.getElementById('sb-wgtcount-label');
+    if(wc) wc.textContent = _widgetInstances.length;
+    if(wl) wl.textContent = _widgetInstances.length + ' active';
 }
 
 var WIDGET_DEFS = [
-    {type:'clock',    label:'Clock',          desc:'Live digital clock',       emoji:'🕐', bg:'#4f67d8'},
-    {type:'calendar', label:'Calendar',        desc:'This month at a glance',   emoji:'📅', bg:'#7c5cbf'},
-    {type:'sysmon',   label:'System Monitor',  desc:'CPU & memory meters',      emoji:'📊', bg:'#2a7d4f'},
-    {type:'notes',    label:'Quick Notes',     desc:'Sticky note on your desk', emoji:'📝', bg:'#b07a1a'},
-    {type:'weather',  label:'Weather',         desc:'Current conditions',       emoji:'⛅', bg:'#1a7ba0'}
+    {type:'clock',      label:'Clock',          desc:'Live digital clock',             emoji:'🕐', bg:'#4f67d8'},
+    {type:'calendar',   label:'Calendar',        desc:'This month at a glance',         emoji:'📅', bg:'#7c5cbf'},
+    {type:'weather',    label:'Weather',         desc:'Live weather — set your city',    emoji:'⛅', bg:'#1a7ba0'},
+    {type:'sysmon',     label:'System Monitor',  desc:'CPU & memory meters',            emoji:'📊', bg:'#2a7d4f'},
+    {type:'notes',      label:'Quick Notes',     desc:'Sticky note on your desktop',    emoji:'📝', bg:'#b07a1a'},
+    {type:'quicklinks', label:'Quick Links',     desc:'Saved website shortcuts',        emoji:'🔗', bg:'#c0392b'},
+    {type:'countdown',  label:'Countdown',       desc:'Count down to any date',         emoji:'⏳', bg:'#8e44ad'},
+    {type:'search',     label:'Web Search',      desc:'Search Google from desktop',     emoji:'🔍', bg:'#2c3e50'},
+    {type:'quote',      label:'Daily Quote',     desc:'Inspiring quote of the day',     emoji:'💬', bg:'#16a085'},
+    {type:'stocks',     label:'Crypto Ticker',   desc:'Live BTC/ETH prices',            emoji:'📈', bg:'#1a5276'},
 ];
 
-/* ── Inject the editor dialog & styles into the page ──────── */
+/* ── Widget Editor Injection ──────────────────────────────── */
 function injectWidgetEditor() {
-    /* Styles */
     var style = document.createElement('style');
     style.textContent = `
+    /* ── Backdrop / panel ─────────────────────────────── */
     #silly-widget-panel-backdrop {
         display:none; position:fixed; inset:0; z-index:8000;
-        background:rgba(0,0,0,0.55); backdrop-filter:blur(6px);
+        background:rgba(0,0,0,0.6); backdrop-filter:blur(8px);
         align-items:center; justify-content:center;
     }
     #silly-widget-panel-backdrop.open { display:flex; }
     #silly-widget-panel {
-        background:#111320; border:1px solid rgba(255,255,255,0.12);
-        border-radius:18px; box-shadow:0 24px 64px rgba(0,0,0,0.7);
-        width:min(560px,96vw); max-height:80vh; display:flex; flex-direction:column;
+        background:#0f1120; border:1px solid rgba(255,255,255,0.13);
+        border-radius:18px; box-shadow:0 30px 80px rgba(0,0,0,0.8);
+        width:min(600px,96vw); max-height:85vh; display:flex; flex-direction:column;
         overflow:hidden; font-family:'Rajdhani',sans-serif; color:#e8eaf6;
     }
     #silly-widget-panel header {
         display:flex; align-items:center; justify-content:space-between;
-        padding:18px 22px; border-bottom:1px solid rgba(255,255,255,0.08);
-        flex-shrink:0;
+        padding:18px 24px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;
     }
-    #silly-widget-panel header h2 { font-size:18px; font-weight:700; margin:0; display:flex; align-items:center; gap:10px; }
+    #silly-widget-panel header h2 { font-size:18px; font-weight:700; margin:0; gap:10px; display:flex; align-items:center; }
     #silly-widget-panel header h2 span { color:#6c8fff; }
     #swp-close { background:transparent; border:1px solid rgba(255,255,255,0.15); color:#aaa;
         width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px;
-        display:flex; align-items:center; justify-content:center; transition:all .2s; }
+        display:flex; align-items:center; justify-content:center; transition:.2s; }
     #swp-close:hover { color:#ff5f57; border-color:#ff5f57; }
-    #silly-widget-panel .swp-body { overflow-y:auto; padding:20px 22px; flex:1; }
+    #silly-widget-panel .swp-body { overflow-y:auto; padding:20px 24px; flex:1; display:flex; flex-direction:column; gap:20px; }
     #silly-widget-panel .swp-body::-webkit-scrollbar { width:5px; }
-    #silly-widget-panel .swp-body::-webkit-scrollbar-thumb { background:rgba(108,143,255,0.35); border-radius:5px; }
-    .swp-section-title { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(232,234,246,0.4); font-weight:600; margin-bottom:12px; }
-    .swp-catalog { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:24px; }
-    .swp-catalog-item { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
-        border-radius:12px; padding:14px; display:flex; align-items:flex-start; gap:12px;
-        cursor:pointer; transition:all .2s; }
+    #silly-widget-panel .swp-body::-webkit-scrollbar-thumb { background:rgba(108,143,255,0.3); border-radius:5px; }
+    .swp-section-title { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(232,234,246,0.4); font-weight:600; margin-bottom:10px; }
+    .swp-catalog { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .swp-catalog-item { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+        border-radius:12px; padding:13px; display:flex; align-items:flex-start; gap:12px;
+        cursor:pointer; transition:.2s; }
     .swp-catalog-item:hover { background:rgba(108,143,255,0.12); border-color:rgba(108,143,255,0.35); transform:translateY(-2px); }
-    .swp-cat-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .swp-cat-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
     .swp-cat-info strong { display:block; font-size:14px; font-weight:600; }
-    .swp-cat-info small { color:rgba(232,234,246,0.45); font-size:12px; }
+    .swp-cat-info small { color:rgba(232,234,246,0.4); font-size:11px; }
     .swp-active-list { display:flex; flex-direction:column; gap:8px; }
-    .swp-active-row { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
-        border-radius:10px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .swp-active-row span { font-size:14px; }
+    .swp-active-row { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+        border-radius:10px; padding:11px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .swp-active-row .swp-row-name { font-size:14px; display:flex; align-items:center; gap:8px; }
+    .swp-row-btns { display:flex; gap:8px; }
+    .swp-cfg-btn { background:transparent; border:1px solid rgba(108,143,255,0.4); color:#6c8fff;
+        padding:4px 12px; border-radius:7px; cursor:pointer; font-size:12px; font-family:inherit; transition:.2s; }
+    .swp-cfg-btn:hover { background:rgba(108,143,255,0.15); }
     .swp-remove-btn { background:transparent; border:1px solid rgba(255,95,87,0.4); color:#ff5f57;
-        padding:5px 14px; border-radius:8px; cursor:pointer; font-size:12px; font-family:inherit; transition:all .2s; }
+        padding:4px 12px; border-radius:7px; cursor:pointer; font-size:12px; font-family:inherit; transition:.2s; }
     .swp-remove-btn:hover { background:rgba(255,95,87,0.15); }
-    .swp-empty { color:rgba(232,234,246,0.35); font-size:13px; text-align:center; padding:16px 0; }
+    .swp-empty { color:rgba(232,234,246,0.3); font-size:13px; text-align:center; padding:20px 0; }
 
-    /* Desktop widgets */
-    .silly-desk-widget { position:absolute; z-index:80; user-select:none;
-        border-radius:14px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.55);
+    /* ── Desktop widget shell ──────────────────────────── */
+    .silly-desk-widget { position:fixed; z-index:80; user-select:none;
+        border-radius:14px; overflow:visible;
+        box-shadow:0 8px 32px rgba(0,0,0,0.6);
         animation:sillywgtIn .25s cubic-bezier(.34,1.56,.64,1); }
-    @keyframes sillywgtIn { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
-    .swgt-bar { height:28px; background:rgba(0,0,0,0.35); border-bottom:1px solid rgba(255,255,255,0.08);
+    @keyframes sillywgtIn { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
+    .swgt-shell { border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.09); }
+    .swgt-bar { height:30px; background:rgba(8,10,20,0.7); backdrop-filter:blur(20px);
+        border-bottom:1px solid rgba(255,255,255,0.07);
         display:flex; align-items:center; justify-content:space-between; padding:0 10px;
-        cursor:grab; font-size:11px; color:rgba(232,234,246,0.45); font-family:'Rajdhani',sans-serif; }
+        cursor:grab; font-size:11px; color:rgba(232,234,246,0.4); font-family:'Rajdhani',sans-serif; gap:8px; }
     .swgt-bar:active { cursor:grabbing; }
-    .swgt-x { background:transparent; border:none; color:rgba(232,234,246,0.4); cursor:pointer;
-        font-size:14px; line-height:1; padding:0; transition:color .15s; }
-    .swgt-x:hover { color:#ff5f57; }
-    .swgt-body { background:rgba(12,14,26,0.88); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,0.09); }
+    .swgt-bar-left { display:flex; align-items:center; gap:6px; flex:1; min-width:0; overflow:hidden; white-space:nowrap; }
+    .swgt-bar-right { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .swgt-icon-btn { background:transparent; border:none; color:rgba(232,234,246,0.35);
+        cursor:pointer; font-size:13px; line-height:1; padding:0 3px; transition:color .15s; }
+    .swgt-icon-btn:hover { color:#e8eaf6; }
+    .swgt-x:hover { color:#ff5f57 !important; }
+    .swgt-body { background:rgba(10,12,24,0.9); backdrop-filter:blur(20px); }
 
-    /* Clock widget */
-    .swgt-clock .swgt-body { padding:14px 20px; text-align:center; min-width:180px; }
-    .swgt-clock-time { font-family:'Orbitron',monospace; font-size:30px; font-weight:700; color:#e8eaf6; letter-spacing:2px; }
-    .swgt-clock-date { font-size:11px; color:rgba(232,234,246,0.45); margin-top:4px; letter-spacing:2px; text-transform:uppercase; }
+    /* Resize handle */
+    .swgt-resize { position:absolute; bottom:0; right:0; width:18px; height:18px;
+        cursor:se-resize; z-index:10; display:flex; align-items:flex-end; justify-content:flex-end; padding:3px; }
+    .swgt-resize svg { width:10px; height:10px; opacity:0.3; transition:opacity .15s; }
+    .silly-desk-widget:hover .swgt-resize svg { opacity:0.7; }
 
-    /* Calendar widget */
-    .swgt-calendar .swgt-body { padding:12px 16px; min-width:230px; }
-    .swgt-cal-month { font-size:13px; font-weight:700; color:#e8eaf6; margin-bottom:10px; }
+    /* ── Per-widget config popover ─────────────────────── */
+    .swgt-cfg-popover { position:absolute; top:32px; right:0; z-index:500;
+        background:rgba(10,12,24,0.97); border:1px solid rgba(255,255,255,0.12);
+        border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,0.7);
+        padding:14px 16px; min-width:220px; display:none; flex-direction:column; gap:10px;
+        font-family:'Rajdhani',sans-serif; color:#e8eaf6; }
+    .swgt-cfg-popover.open { display:flex; }
+    .swgt-cfg-row { display:flex; flex-direction:column; gap:4px; }
+    .swgt-cfg-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+        color:rgba(232,234,246,0.4); }
+    .swgt-cfg-input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+        color:#e8eaf6; padding:7px 10px; border-radius:8px; font-size:13px;
+        font-family:'Rajdhani',sans-serif; outline:none; width:100%; }
+    .swgt-cfg-input:focus { border-color:rgba(108,143,255,0.5); background:rgba(108,143,255,0.07); }
+    .swgt-cfg-btn-apply { background:#6c8fff; border:none; color:#fff;
+        padding:7px 14px; border-radius:8px; cursor:pointer; font-size:13px;
+        font-family:'Rajdhani',sans-serif; font-weight:600; transition:.2s; width:100%; }
+    .swgt-cfg-btn-apply:hover { background:#8aa3ff; }
+    .swgt-cfg-select { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+        color:#e8eaf6; padding:7px 10px; border-radius:8px; font-size:13px;
+        font-family:'Rajdhani',sans-serif; outline:none; width:100%; }
+
+    /* ── Individual widget body styles ─────────────────── */
+    .swgt-clock .swgt-body { padding:16px 22px; text-align:center; }
+    .swgt-clock-time { font-family:'Orbitron',monospace; font-size:32px; font-weight:700; color:#e8eaf6; letter-spacing:3px; }
+    .swgt-clock-secs { font-family:'Orbitron',monospace; font-size:18px; color:rgba(232,234,246,0.35); }
+    .swgt-clock-date { font-size:11px; color:rgba(232,234,246,0.4); margin-top:6px; letter-spacing:2px; text-transform:uppercase; }
+
+    .swgt-calendar .swgt-body { padding:12px 14px; }
+    .swgt-cal-month { font-size:13px; font-weight:700; color:#e8eaf6; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+    .swgt-cal-nav { background:transparent; border:none; color:rgba(232,234,246,0.4); cursor:pointer; font-size:14px; transition:.15s; }
+    .swgt-cal-nav:hover { color:#e8eaf6; }
     .swgt-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
-    .swgt-cal-grid span { text-align:center; font-size:10px; padding:4px 2px; border-radius:4px; color:rgba(232,234,246,0.45); font-family:'Rajdhani',sans-serif; }
+    .swgt-cal-grid span { text-align:center; font-size:10px; padding:4px 2px; border-radius:4px;
+        color:rgba(232,234,246,0.4); font-family:'Rajdhani',sans-serif; }
     .swgt-cal-grid span.swgt-cal-hd { color:#6c8fff; font-weight:700; }
-    .swgt-cal-grid span.swgt-cal-today { background:#6c8fff; color:#fff; border-radius:50%; font-weight:700; }
+    .swgt-cal-grid span.swgt-cal-today { background:#6c8fff; color:#fff !important; border-radius:50%; font-weight:700; }
+    .swgt-cal-grid span.swgt-cal-other { opacity:0.3; }
 
-    /* Sysmon widget */
-    .swgt-sysmon .swgt-body { padding:12px 16px; min-width:200px; display:flex; flex-direction:column; gap:9px; }
-    .swgt-mon-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(232,234,246,0.4); display:block; margin-bottom:4px; font-family:'Rajdhani',sans-serif; }
-    .swgt-mon-bar { height:6px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+    .swgt-weather .swgt-body { padding:16px 20px; }
+    .swgt-weather-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .swgt-weather-icon { font-size:42px; }
+    .swgt-weather-right { text-align:right; }
+    .swgt-weather-temp { font-family:'Orbitron',monospace; font-size:34px; font-weight:700; color:#e8eaf6; }
+    .swgt-weather-unit { font-size:16px; color:rgba(232,234,246,0.4); }
+    .swgt-weather-cond { font-size:12px; color:rgba(232,234,246,0.5); margin-top:2px; }
+    .swgt-weather-loc { font-size:11px; color:rgba(232,234,246,0.35); letter-spacing:1px; text-transform:uppercase; margin-top:8px; }
+    .swgt-weather-details { display:flex; gap:12px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.06); padding-top:8px; }
+    .swgt-weather-detail { display:flex; flex-direction:column; align-items:center; flex:1; }
+    .swgt-weather-detail span:first-child { font-size:10px; color:rgba(232,234,246,0.35); letter-spacing:1px; }
+    .swgt-weather-detail span:last-child { font-size:13px; color:#e8eaf6; font-weight:600; }
+
+    .swgt-sysmon .swgt-body { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+    .swgt-mon-row { display:flex; flex-direction:column; gap:4px; }
+    .swgt-mon-hd { display:flex; justify-content:space-between; align-items:center; }
+    .swgt-mon-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(232,234,246,0.4); font-family:'Rajdhani',sans-serif; }
+    .swgt-mon-pct { font-size:10px; color:rgba(232,234,246,0.5); }
+    .swgt-mon-bar { height:5px; background:rgba(255,255,255,0.07); border-radius:4px; overflow:hidden; }
     .swgt-mon-fill { height:100%; border-radius:4px; background:#6c8fff; transition:width 1s ease; }
-    .swgt-mon-fill.warn { background:#febc2e; }
+    .swgt-mon-fill.warn { background:#febc2e; } .swgt-mon-fill.crit { background:#ff5f57; }
 
-    /* Notes widget */
-    .swgt-notes .swgt-body { min-width:220px; }
-    .swgt-notes textarea { width:100%; height:100px; background:transparent; border:none; outline:none;
+    .swgt-notes .swgt-body { }
+    .swgt-notes textarea { width:100%; background:transparent; border:none; outline:none;
         color:#e8eaf6; font-size:13px; font-family:'Rajdhani',sans-serif; line-height:1.6;
-        padding:12px; resize:none; user-select:text; -webkit-user-select:text; }
+        padding:12px; resize:none; user-select:text; -webkit-user-select:text;
+        display:block; box-sizing:border-box; }
 
-    /* Weather widget */
-    .swgt-weather .swgt-body { padding:14px 20px; text-align:center; min-width:180px; }
-    .swgt-weather-icon { font-size:34px; margin-bottom:6px; }
-    .swgt-weather-temp { font-family:'Orbitron',monospace; font-size:32px; font-weight:700; color:#e8eaf6; }
-    .swgt-weather-cond { font-size:12px; color:rgba(232,234,246,0.45); margin-top:4px; }
+    .swgt-quicklinks .swgt-body { padding:10px; }
+    .swgt-ql-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+    .swgt-ql-link { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+        border-radius:8px; padding:8px 10px; cursor:pointer; transition:.2s;
+        display:flex; align-items:center; gap:8px; font-size:12px; color:#e8eaf6;
+        white-space:nowrap; overflow:hidden; }
+    .swgt-ql-link:hover { background:rgba(108,143,255,0.15); border-color:rgba(108,143,255,0.3); }
+    .swgt-ql-link img { width:16px; height:16px; border-radius:3px; flex-shrink:0; }
 
-    /* Right-click context menu trigger */
-    #silly-widget-ctx { display:none; position:fixed; z-index:9600;
-        background:rgba(14,16,28,0.96); backdrop-filter:blur(16px);
-        border:1px solid rgba(255,255,255,0.1); border-radius:10px;
-        box-shadow:0 8px 24px rgba(0,0,0,0.5); padding:6px; min-width:180px; }
-    #silly-widget-ctx button { display:flex; align-items:center; gap:10px;
-        width:100%; background:transparent; border:none; padding:9px 12px;
-        border-radius:6px; cursor:pointer; font-size:13px; color:rgba(232,234,246,0.7);
-        font-family:'Rajdhani',sans-serif; text-align:left; transition:all .15s; }
-    #silly-widget-ctx button:hover { background:rgba(255,255,255,0.08); color:#e8eaf6; }
+    .swgt-countdown .swgt-body { padding:14px 18px; text-align:center; }
+    .swgt-cd-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(232,234,246,0.35); margin-bottom:10px; }
+    .swgt-cd-grid { display:flex; gap:8px; justify-content:center; }
+    .swgt-cd-unit { display:flex; flex-direction:column; align-items:center; gap:2px; }
+    .swgt-cd-num { font-family:'Orbitron',monospace; font-size:24px; font-weight:700; color:#e8eaf6; line-height:1; }
+    .swgt-cd-lbl { font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(232,234,246,0.35); }
+    .swgt-cd-sep { font-family:'Orbitron',monospace; font-size:24px; color:rgba(232,234,246,0.2); line-height:1; align-self:flex-start; padding-top:2px; }
+    .swgt-cd-done { font-size:14px; color:#27c93f; padding:10px 0; }
+
+    .swgt-search .swgt-body { padding:12px; }
+    .swgt-search-form { display:flex; gap:8px; }
+    .swgt-search-input { flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+        color:#e8eaf6; padding:9px 12px; border-radius:8px; font-size:13px;
+        font-family:'Rajdhani',sans-serif; outline:none; }
+    .swgt-search-input:focus { border-color:rgba(108,143,255,0.5); background:rgba(108,143,255,0.08); }
+    .swgt-search-btn { background:#6c8fff; border:none; color:#fff; padding:9px 14px;
+        border-radius:8px; cursor:pointer; font-size:14px; transition:.15s; }
+    .swgt-search-btn:hover { background:#8aa3ff; }
+    .swgt-search-engines { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+    .swgt-search-eng { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+        color:rgba(232,234,246,0.5); padding:4px 10px; border-radius:6px; font-size:11px;
+        cursor:pointer; font-family:'Rajdhani',sans-serif; transition:.15s; }
+    .swgt-search-eng:hover, .swgt-search-eng.active { background:rgba(108,143,255,0.15); color:#e8eaf6; border-color:rgba(108,143,255,0.3); }
+
+    .swgt-quote .swgt-body { padding:16px 18px; }
+    .swgt-quote-text { font-size:14px; color:#e8eaf6; line-height:1.6; font-style:italic; margin-bottom:10px; }
+    .swgt-quote-author { font-size:11px; color:rgba(232,234,246,0.4); letter-spacing:1px; text-align:right; }
+    .swgt-quote-refresh { background:transparent; border:1px solid rgba(255,255,255,0.1); color:rgba(232,234,246,0.4);
+        padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px; margin-top:8px;
+        font-family:'Rajdhani',sans-serif; transition:.15s; }
+    .swgt-quote-refresh:hover { color:#e8eaf6; border-color:rgba(255,255,255,0.25); }
+
+    .swgt-stocks .swgt-body { padding:10px 14px; display:flex; flex-direction:column; gap:8px; }
+    .swgt-ticker-row { display:flex; justify-content:space-between; align-items:center;
+        padding:6px 8px; background:rgba(255,255,255,0.04); border-radius:6px; }
+    .swgt-ticker-sym { font-family:'Orbitron',monospace; font-size:11px; color:#e8eaf6; font-weight:700; }
+    .swgt-ticker-price { font-size:14px; color:#e8eaf6; font-weight:600; }
+    .swgt-ticker-chg { font-size:11px; } .swgt-up { color:#27c93f; } .swgt-dn { color:#ff5f57; }
+
+    /* ── Window resize handle ──────────────────────────── */
+    .win-resize-handle {
+        position:absolute; bottom:0; right:0; width:20px; height:20px;
+        cursor:se-resize; z-index:10; display:flex; align-items:flex-end; justify-content:flex-end; padding:4px;
+    }
+    .win-resize-handle svg { width:10px; height:10px; fill:rgba(255,255,255,0.2); }
+    .window:hover .win-resize-handle svg { fill:rgba(255,255,255,0.45); }
+    .window.maximized .win-resize-handle { display:none; }
+
+    /* ── Sidebar stat rows ─────────────────────────────── */
+    .sidebar__icon-box { width:36px; height:36px; background:rgba(108,143,255,0.15); border-radius:8px;
+        display:flex; align-items:center; justify-content:center; color:#6c8fff; font-size:16px; flex-shrink:0; }
+    .sidebar__stat-row { display:flex; justify-content:space-between; align-items:center;
+        padding:6px 2px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:12px; }
+    .sidebar__stat-row:last-child { border-bottom:none; }
+    .sidebar__stat-label { color:rgba(232,234,246,0.4); }
+    .sidebar__stat-val { color:#e8eaf6; font-weight:600; font-family:'Orbitron',monospace; font-size:11px; }
     `;
     document.head.appendChild(style);
 
-    /* Backdrop + panel */
+    /* Panel HTML */
     var bd = document.createElement('div');
     bd.id = 'silly-widget-panel-backdrop';
     bd.innerHTML = `
@@ -1563,28 +1706,23 @@ function injectWidgetEditor() {
             <button id="swp-close">✕</button>
         </header>
         <div class="swp-body">
-            <div class="swp-section-title">Add a Widget</div>
-            <div class="swp-catalog" id="swp-catalog"></div>
-            <div class="swp-section-title">Active Widgets</div>
-            <div class="swp-active-list" id="swp-active"></div>
+            <div>
+                <div class="swp-section-title">Add a Widget</div>
+                <div class="swp-catalog" id="swp-catalog"></div>
+            </div>
+            <div>
+                <div class="swp-section-title">Active Widgets</div>
+                <div class="swp-active-list" id="swp-active"></div>
+            </div>
         </div>
     </div>`;
     document.body.appendChild(bd);
     bd.addEventListener('click', function(e){ if(e.target===bd) closeWidgetEditor(); });
     document.getElementById('swp-close').addEventListener('click', closeWidgetEditor);
 
-    /* Right-click ctx for desktop → open widget editor */
-    var dctx = document.getElementById('desktop-context-menu');
-    if(dctx) {
-        var sep = document.createElement('li'); sep.className='ctx-separator'; sep.setAttribute('role','separator');
-        var item = document.createElement('li'); item.className='ctx-item'; item.setAttribute('role','menuitem'); item.setAttribute('tabindex','0');
-        item.innerHTML = '<i class="fas fa-th-large fa-fw"></i> Add Widget';
-        item.onclick = function(){ openWidgetEditor(); dctx.style.display='none'; };
-        dctx.appendChild(sep); dctx.appendChild(item);
-    }
-
     renderWidgets();
     _refreshWidgetPanel();
+    _startSidebarStats();
 }
 
 function openWidgetEditor() {
@@ -1605,7 +1743,7 @@ function _refreshWidgetPanel() {
     WIDGET_DEFS.forEach(function(def) {
         var div = document.createElement('div');
         div.className = 'swp-catalog-item';
-        div.innerHTML = '<div class="swp-cat-icon" style="background:'+def.bg+'">'+def.emoji+'</div>' +
+        div.innerHTML = '<div class="swp-cat-icon" style="background:'+def.bg+'" >'+def.emoji+'</div>' +
             '<div class="swp-cat-info"><strong>'+def.label+'</strong><small>'+def.desc+'</small></div>';
         div.onclick = function(){ _addWidget(def.type); };
         cat.appendChild(div);
@@ -1613,23 +1751,33 @@ function _refreshWidgetPanel() {
 
     active.innerHTML = '';
     if(!_widgetInstances.length) {
-        active.innerHTML = '<div class="swp-empty">No widgets yet — add one above.</div>';
+        active.innerHTML = '<div class="swp-empty">No widgets active — click one above to add it.</div>';
         return;
     }
     _widgetInstances.forEach(function(wi, idx) {
         var def = WIDGET_DEFS.find(function(d){return d.type===wi.type;}) || {label:wi.type, emoji:'📦'};
         var row = document.createElement('div');
         row.className = 'swp-active-row';
-        row.innerHTML = '<span>'+def.emoji+' '+def.label+'</span>' +
-            '<button class="swp-remove-btn" onclick="_removeWidget('+idx+')">Remove</button>';
+        row.innerHTML = '<span class="swp-row-name">'+def.emoji+' '+def.label+'</span>' +
+            '<div class="swp-row-btns">' +
+            '<button class="swp-cfg-btn" onclick="_openWidgetCfgById(\''+wi.id+'\')">⚙ Config</button>' +
+            '<button class="swp-remove-btn" onclick="_removeWidget('+idx+')">Remove</button>' +
+            '</div>';
         active.appendChild(row);
     });
 }
 
 function _addWidget(type) {
     var id = 'w' + Date.now();
-    var offset = _widgetInstances.length * 22;
-    _widgetInstances.push({type:type, id:id, x:120+offset, y:100+offset});
+    var offset = (_widgetInstances.length % 8) * 24;
+    var cfg = {};
+    if(type==='weather') cfg.location = 'London';
+    if(type==='countdown') { cfg.label='New Year'; cfg.date='2026-01-01'; }
+    if(type==='quicklinks') cfg.links = [{label:'Google',url:'https://google.com'},{label:'YouTube',url:'https://youtube.com'},{label:'GitHub',url:'https://github.com'},{label:'Reddit',url:'https://reddit.com'}];
+    if(type==='search') cfg.engine = 'google';
+    if(type==='notes') cfg.fontSize = 13;
+    if(type==='clock') cfg.use24 = false;
+    _widgetInstances.push({type:type, id:id, x:140+offset, y:120+offset, w:null, h:null, cfg:cfg});
     _saveWidgets();
     renderWidgets();
     _refreshWidgetPanel();
@@ -1639,11 +1787,24 @@ function _addWidget(type) {
 function _removeWidget(idx) {
     var wi = _widgetInstances[idx];
     if(wi) { var el = document.getElementById('swgt-'+wi.id); if(el) el.remove(); }
-    _widgetInstances.splice(idx, 1);
+    _widgetInstances.splice(idx,1);
     _saveWidgets();
     _refreshWidgetPanel();
 }
 window._removeWidget = _removeWidget;
+
+window._removeWidgetById = function(id) {
+    var idx = _widgetInstances.findIndex(function(w){return w.id===id;});
+    if(idx>-1) _removeWidget(idx);
+};
+
+window._openWidgetCfgById = function(id) {
+    var el = document.getElementById('swgt-'+id);
+    if(!el) return;
+    var pop = el.querySelector('.swgt-cfg-popover');
+    if(pop) { pop.classList.toggle('open'); }
+    closeWidgetEditor();
+};
 
 function renderWidgets() {
     document.querySelectorAll('.silly-desk-widget').forEach(function(w){w.remove();});
@@ -1651,128 +1812,576 @@ function renderWidgets() {
 }
 
 function _createWidget(wi) {
-    var def = WIDGET_DEFS.find(function(d){return d.type===wi.type;}) || {label:wi.type,emoji:'📦'};
+    var def = WIDGET_DEFS.find(function(d){return d.type===wi.type;}) || {label:wi.type, emoji:'📦'};
     var el = document.createElement('div');
     el.className = 'silly-desk-widget swgt-' + wi.type;
     el.id = 'swgt-' + wi.id;
-    el.style.left = (wi.x||120)+'px'; el.style.top = (wi.y||120)+'px';
+    el.style.left = (wi.x||140)+'px';
+    el.style.top  = (wi.y||120)+'px';
+    if(wi.w) el.style.width  = wi.w+'px';
+    if(wi.h) el.style.height = wi.h+'px';
 
-    var body = _buildWidgetBody(wi);
+    var cfg = wi.cfg || {};
+    var bodyHTML = _buildWidgetBody(wi);
+    var cfgHTML  = _buildWidgetCfg(wi);
+
     el.innerHTML =
+        '<div class="swgt-shell">' +
         '<div class="swgt-bar" onmousedown="_widgetDragStart(event,\''+wi.id+'\')">'+
-            '<span>'+def.emoji+' '+def.label+'</span>'+
-            '<button class="swgt-x" onclick="_removeWidgetById(\''+wi.id+'\')">✕</button>'+
+            '<div class="swgt-bar-left">'+def.emoji+' <span>'+def.label+'</span></div>'+
+            '<div class="swgt-bar-right">'+
+                '<button class="swgt-icon-btn" title="Settings" onclick="event.stopPropagation();_toggleWgtCfg(this)">⚙</button>'+
+                '<button class="swgt-icon-btn swgt-x" title="Close" onclick="_removeWidgetById(\''+wi.id+'\')">✕</button>'+
+            '</div>'+
         '</div>'+
-        '<div class="swgt-body">'+body+'</div>';
+        '<div class="swgt-body">'+bodyHTML+'</div>'+
+        '</div>'+
+        cfgHTML +
+        '<div class="swgt-resize" onmousedown="_widgetResizeStart(event,\''+wi.id+'\')" title="Resize">'+
+            '<svg viewBox="0 0 10 10"><path d="M2 10 L10 10 L10 2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'+
+        '</div>';
 
     document.body.appendChild(el);
 
-    if(wi.type==='clock') _startClockWidget(wi.id);
-    if(wi.type==='sysmon') _startSysmon(wi.id);
+    // Init per-type behaviour
+    if(wi.type==='clock')   _startClockWidget(wi);
+    if(wi.type==='sysmon')  _startSysmon(wi.id);
+    if(wi.type==='weather') _fetchWeather(wi);
+    if(wi.type==='countdown') _startCountdown(wi);
+    if(wi.type==='stocks')  _fetchStocks(wi.id);
+    if(wi.type==='quote')   _fetchQuote(wi.id);
     if(wi.type==='notes') {
         var ta = el.querySelector('textarea');
         if(ta) {
-            ta.value = localStorage.getItem('silly_note_'+wi.id)||'';
-            ta.addEventListener('input', function(){ localStorage.setItem('silly_note_'+wi.id, ta.value); });
-            ta.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+            ta.value = wi.cfg && wi.cfg.notes ? wi.cfg.notes : (localStorage.getItem('silly_note_'+wi.id)||'');
+            ta.style.fontSize = ((wi.cfg&&wi.cfg.fontSize)||13)+'px';
+            ta.style.height = (wi.h ? wi.h-30-20 : 100)+'px';
+            ta.addEventListener('input', function(){
+                localStorage.setItem('silly_note_'+wi.id, ta.value);
+                var w = _widgetInstances.find(function(w){return w.id===wi.id;});
+                if(w){ if(!w.cfg) w.cfg={}; w.cfg.notes=ta.value; _saveWidgets(); }
+            });
+            ta.addEventListener('mousedown', function(e){e.stopPropagation();});
         }
     }
+    if(wi.type==='search') {
+        var inp = el.querySelector('.swgt-search-input');
+        if(inp) inp.addEventListener('mousedown',function(e){e.stopPropagation();});
+        // mark active engine
+        var eng = (wi.cfg&&wi.cfg.engine)||'google';
+        el.querySelectorAll('.swgt-search-eng').forEach(function(b){
+            if(b.dataset.eng===eng) b.classList.add('active');
+        });
+    }
+    if(wi.type==='quicklinks') _renderQuickLinks(wi);
 }
 
-window._removeWidgetById = function(id) {
-    var idx = _widgetInstances.findIndex(function(w){return w.id===id;});
-    if(idx>-1) _removeWidget(idx);
+window._toggleWgtCfg = function(btn) {
+    var shell = btn.closest('.silly-desk-widget');
+    if(!shell) return;
+    var pop = shell.querySelector('.swgt-cfg-popover');
+    if(pop) pop.classList.toggle('open');
 };
 
+/* close all cfg popovers on outside click */
+document.addEventListener('click', function(e){
+    if(!e.target.closest('.swgt-cfg-popover') && !e.target.matches('.swgt-icon-btn')) {
+        document.querySelectorAll('.swgt-cfg-popover.open').forEach(function(p){ p.classList.remove('open'); });
+    }
+});
+
+/* ── Widget body builders ────────────────────────────────── */
 function _buildWidgetBody(wi) {
-    var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var cfg = wi.cfg || {};
+    var id  = wi.id;
     if(wi.type==='clock') {
-        return '<div style="padding:14px 20px;text-align:center">'+
-            '<div class="swgt-clock-time" id="swgt-ct-'+wi.id+'">--:-- --</div>'+
-            '<div class="swgt-clock-date" id="swgt-cd-'+wi.id+'">---</div></div>';
+        return '<div style="padding:16px 22px;text-align:center">'+
+            '<div style="display:flex;align-items:baseline;justify-content:center;gap:2px">'+
+            '<span class="swgt-clock-time" id="swgt-ct-'+id+'">--:--</span>'+
+            '<span class="swgt-clock-secs" id="swgt-cs-'+id+'">:--</span>'+
+            '</div>'+
+            '<div class="swgt-clock-date" id="swgt-cd-'+id+'">---</div></div>';
     }
     if(wi.type==='calendar') {
-        var now=new Date(), y=now.getFullYear(), m=now.getMonth(), today=now.getDate();
-        var first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
-        var g='<div style="padding:12px 16px">'+
-            '<div class="swgt-cal-month">'+MONTHS[m]+' '+y+'</div>'+
-            '<div class="swgt-cal-grid">';
-        ['S','M','T','W','T','F','S'].forEach(function(d){g+='<span class="swgt-cal-hd">'+d+'</span>';});
-        for(var i=0;i<first;i++) g+='<span></span>';
-        for(var d=1;d<=days;d++) g+='<span'+(d===today?' class="swgt-cal-today"':'')+'>'+d+'</span>';
-        return g+'</div></div>';
+        return _buildCalBody(id);
+    }
+    if(wi.type==='weather') {
+        return '<div style="padding:16px 20px">'+
+            '<div class="swgt-weather-top">'+
+            '<div class="swgt-weather-icon" id="swgt-wi-'+id+'">⛅</div>'+
+            '<div class="swgt-weather-right">'+
+            '<div><span class="swgt-weather-temp" id="swgt-wt-'+id+'">--</span><span class="swgt-weather-unit">°</span></div>'+
+            '<div class="swgt-weather-cond" id="swgt-wc-'+id+'">Loading...</div></div></div>'+
+            '<div class="swgt-weather-loc" id="swgt-wl-'+id+'">'+((cfg.location)||'London').toUpperCase()+'</div>'+
+            '<div class="swgt-weather-details">'+
+            '<div class="swgt-weather-detail"><span>WIND</span><span id="swgt-ww-'+id+'">--</span></div>'+
+            '<div class="swgt-weather-detail"><span>HUM</span><span id="swgt-wh-'+id+'">--</span></div>'+
+            '<div class="swgt-weather-detail"><span>FEELS</span><span id="swgt-wf-'+id+'">--</span></div>'+
+            '</div></div>';
     }
     if(wi.type==='sysmon') {
-        return '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:9px">'+
-            '<div><label class="swgt-mon-lbl">CPU</label><div class="swgt-mon-bar"><div class="swgt-mon-fill" id="swgt-cpu-'+wi.id+'" style="width:30%"></div></div></div>'+
-            '<div><label class="swgt-mon-lbl">RAM</label><div class="swgt-mon-bar"><div class="swgt-mon-fill warn" id="swgt-ram-'+wi.id+'" style="width:55%"></div></div></div>'+
-            '<div><label class="swgt-mon-lbl">NET</label><div class="swgt-mon-bar"><div class="swgt-mon-fill" id="swgt-net-'+wi.id+'" style="width:75%"></div></div></div></div>';
+        return '<div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">'+
+            ['CPU','RAM','NET'].map(function(lbl,i){
+                var fid=['swgt-cpu-','swgt-ram-','swgt-net-'][i]+id;
+                var pid=['swgt-cpup-','swgt-ramp-','swgt-netp-'][i]+id;
+                var cls=i===1?'warn':'';
+                var w=i===0?'30':i===1?'55':'75';
+                return '<div class="swgt-mon-row">'+
+                    '<div class="swgt-mon-hd"><span class="swgt-mon-lbl">'+lbl+'</span><span class="swgt-mon-pct" id="'+pid+'">'+w+'%</span></div>'+
+                    '<div class="swgt-mon-bar"><div class="swgt-mon-fill '+cls+'" id="'+fid+'" style="width:'+w+'%"></div></div></div>';
+            }).join('')+'</div>';
     }
     if(wi.type==='notes') {
         return '<textarea placeholder="Type a note..."></textarea>';
     }
-    if(wi.type==='weather') {
-        return '<div style="padding:14px 20px;text-align:center">'+
-            '<div class="swgt-weather-icon">⛅</div>'+
-            '<div class="swgt-weather-temp">72°F</div>'+
-            '<div class="swgt-weather-cond">Partly Cloudy</div></div>';
+    if(wi.type==='quicklinks') {
+        return '<div style="padding:10px"><div class="swgt-ql-grid" id="swgt-ql-'+id+'"></div></div>';
+    }
+    if(wi.type==='countdown') {
+        return '<div style="padding:14px 18px;text-align:center">'+
+            '<div class="swgt-cd-label" id="swgt-cdlbl-'+id+'">'+((cfg.label)||'Countdown')+'</div>'+
+            '<div class="swgt-cd-grid" id="swgt-cd-'+id+'">' +
+            ['D','H','M','S'].map(function(u,i){ return '<div class="swgt-cd-unit"><div class="swgt-cd-num" id="swgt-cd'+u+'-'+id+'">--</div><div class="swgt-cd-lbl">'+['DAYS','HRS','MIN','SEC'][i]+'</div></div>'+(i<3?'<div class="swgt-cd-sep">:</div>':''); }).join('')+
+            '</div></div>';
+    }
+    if(wi.type==='search') {
+        var engines = {google:'Google',bing:'Bing',ddg:'DuckDuckGo'};
+        return '<div style="padding:12px">'+
+            '<div class="swgt-search-form">'+
+            '<input class="swgt-search-input" placeholder="Search..." id="swgt-si-'+id+'" onkeydown="_wgtSearchKey(event,\''+id+'\')" />'+
+            '<button class="swgt-search-btn" onclick="_wgtSearch(\''+id+'\')" title="Search">🔍</button>'+
+            '</div>'+
+            '<div class="swgt-search-engines">'+
+            Object.keys(engines).map(function(k){ return '<span class="swgt-search-eng" data-eng="'+k+'" onclick="_wgtSetEngine(this,\''+id+'\')" >'+engines[k]+'</span>'; }).join('')+
+            '</div></div>';
+    }
+    if(wi.type==='quote') {
+        return '<div style="padding:16px 18px">'+
+            '<div class="swgt-quote-text" id="swgt-qt-'+id+'">Loading quote...</div>'+
+            '<div class="swgt-quote-author" id="swgt-qa-'+id+'"></div>'+
+            '<button class="swgt-quote-refresh" onclick="_fetchQuote(\''+id+'\')">↻ New Quote</button>'+
+            '</div>';
+    }
+    if(wi.type==='stocks') {
+        return '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px" id="swgt-tck-'+id+'">'+
+            '<div style="color:rgba(232,234,246,0.35);font-size:12px;text-align:center">Loading...</div></div>';
     }
     return '';
 }
 
-function _startClockWidget(id) {
+function _buildCalBody(id) {
+    var now=new Date(), y=now.getFullYear(), m=now.getMonth();
+    return _renderCalMonth(id, y, m);
+}
+function _renderCalMonth(id, y, m) {
+    var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var today=new Date(), ty=today.getFullYear(), tm=today.getMonth(), td=today.getDate();
+    var first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+    var lastDays=new Date(y,m,0).getDate();
+    var g='<div style="padding:12px 14px">'+
+        '<div class="swgt-cal-month">'+
+        '<button class="swgt-cal-nav" onclick="_calNav(\''+id+'\',-1)">‹</button>'+
+        MONTHS[m]+' '+y+
+        '<button class="swgt-cal-nav" onclick="_calNav(\''+id+'\',1)">›</button>'+
+        '</div><div class="swgt-cal-grid">';
+    ['S','M','T','W','T','F','S'].forEach(function(d){g+='<span class="swgt-cal-hd">'+d+'</span>';});
+    for(var i=0;i<first;i++) g+='<span class="swgt-cal-other">'+(lastDays-first+1+i)+'</span>';
+    for(var d=1;d<=days;d++) {
+        var isToday=(d===td&&m===tm&&y===ty);
+        g+='<span'+(isToday?' class="swgt-cal-today"':'')+'>'+d+'</span>';
+    }
+    var trailing=42-(first+days);
+    for(var t=1;t<=trailing;t++) g+='<span class="swgt-cal-other">'+t+'</span>';
+    return g+'</div></div>';
+}
+window._calNav = function(id, dir) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return;
+    if(!wi._calY) { var now=new Date(); wi._calY=now.getFullYear(); wi._calM=now.getMonth(); }
+    wi._calM += dir;
+    if(wi._calM<0){wi._calM=11;wi._calY--;}
+    if(wi._calM>11){wi._calM=0;wi._calY++;}
+    var body = document.querySelector('#swgt-'+id+' .swgt-body');
+    if(body) body.innerHTML = _renderCalMonth(id, wi._calY, wi._calM);
+};
+
+/* ── Per-widget config panels ────────────────────────────── */
+function _buildWidgetCfg(wi) {
+    var cfg = wi.cfg || {};
+    var id  = wi.id;
+    var rows = '';
+    if(wi.type==='weather') {
+        rows = '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">City / Location</label>'+
+            '<input class="swgt-cfg-input" id="swgt-cfgi-'+id+'" value="'+(cfg.location||'London')+'" placeholder="e.g. New York">'+
+            '</div><div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Units</label>'+
+            '<select class="swgt-cfg-select" id="swgt-cfgu-'+id+'">'+
+            '<option value="celsius" '+(cfg.units==='celsius'?'selected':'')+'>Celsius (°C)</option>'+
+            '<option value="fahrenheit" '+(cfg.units==='fahrenheit'?'selected':'')+'>Fahrenheit (°F)</option>'+
+            '</select></div>'+
+            '<button class="swgt-cfg-btn-apply" onclick="_applyWeatherCfg(\''+id+'\')">Apply</button>';
+    } else if(wi.type==='clock') {
+        rows = '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Format</label>'+
+            '<select class="swgt-cfg-select" id="swgt-cfgi-'+id+'">'+
+            '<option value="12" '+(cfg.use24?'':'selected')+'>12-hour (AM/PM)</option>'+
+            '<option value="24" '+(cfg.use24?'selected':'')+'>24-hour</option>'+
+            '</select></div>'+
+            '<button class="swgt-cfg-btn-apply" onclick="_applyClockCfg(\''+id+'\')">Apply</button>';
+    } else if(wi.type==='countdown') {
+        rows = '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Label</label>'+
+            '<input class="swgt-cfg-input" id="swgt-cfgl-'+id+'" value="'+(cfg.label||'Countdown')+'"></div>'+
+            '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Target Date</label>'+
+            '<input class="swgt-cfg-input" type="date" id="swgt-cfgi-'+id+'" value="'+(cfg.date||'')+'"></div>'+
+            '<button class="swgt-cfg-btn-apply" onclick="_applyCdCfg(\''+id+'\')">Apply</button>';
+    } else if(wi.type==='notes') {
+        rows = '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Font Size</label>'+
+            '<input class="swgt-cfg-input" type="number" id="swgt-cfgi-'+id+'" value="'+(cfg.fontSize||13)+'" min="10" max="22">'+
+            '</div>'+
+            '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Background</label>'+
+            '<input class="swgt-cfg-input" id="swgt-cfgb-'+id+'" value="'+(cfg.bg||'rgba(10,12,24,0.9)')+'" placeholder="CSS color"></div>'+
+            '<button class="swgt-cfg-btn-apply" onclick="_applyNotesCfg(\''+id+'\')">Apply</button>';
+    } else if(wi.type==='quicklinks') {
+        rows = '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Links (label|url, one per line)</label>'+
+            '<textarea class="swgt-cfg-input" id="swgt-cfgi-'+id+'" rows="5" style="height:auto;resize:vertical" onmousedown="event.stopPropagation()">'+
+            (cfg.links||[]).map(function(l){return l.label+'|'+l.url;}).join('\
+')+
+            '</textarea></div>'+
+            '<button class="swgt-cfg-btn-apply" onclick="_applyLinksCfg(\''+id+'\')">Apply</button>';
+    } else if(wi.type==='search') {
+        rows = '<div class="swgt-cfg-row"><label class="swgt-cfg-lbl">Default Engine</label>'+
+            '<select class="swgt-cfg-select" id="swgt-cfgi-'+id+'">'+
+            '<option value="google">Google</option><option value="bing">Bing</option><option value="ddg">DuckDuckGo</option>'+
+            '</select></div>'+
+            '<button class="swgt-cfg-btn-apply" onclick="_applySearchCfg(\''+id+'\')">Apply</button>';
+    } else {
+        rows = '<div style="color:rgba(232,234,246,0.35);font-size:12px">No settings for this widget.</div>';
+    }
+    return '<div class="swgt-cfg-popover" onmousedown="event.stopPropagation()">'+rows+'</div>';
+}
+
+/* ── Config apply handlers ───────────────────────────────── */
+window._applyWeatherCfg = function(id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return;
+    if(!wi.cfg) wi.cfg={};
+    var inp = document.getElementById('swgt-cfgi-'+id);
+    var unit = document.getElementById('swgt-cfgu-'+id);
+    if(inp) wi.cfg.location = inp.value.trim() || 'London';
+    if(unit) wi.cfg.units = unit.value;
+    _saveWidgets();
+    _fetchWeather(wi);
+    var loc = document.getElementById('swgt-wl-'+id);
+    if(loc) loc.textContent = wi.cfg.location.toUpperCase();
+    document.querySelector('#swgt-'+id+' .swgt-cfg-popover').classList.remove('open');
+};
+window._applyClockCfg = function(id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return;
+    if(!wi.cfg) wi.cfg={};
+    var sel = document.getElementById('swgt-cfgi-'+id);
+    if(sel) wi.cfg.use24 = sel.value==='24';
+    _saveWidgets();
+    document.querySelector('#swgt-'+id+' .swgt-cfg-popover').classList.remove('open');
+};
+window._applyCdCfg = function(id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return; if(!wi.cfg) wi.cfg={};
+    var lbl=document.getElementById('swgt-cfgl-'+id);
+    var inp=document.getElementById('swgt-cfgi-'+id);
+    if(lbl) wi.cfg.label=lbl.value;
+    if(inp) wi.cfg.date=inp.value;
+    _saveWidgets();
+    var lb=document.getElementById('swgt-cdlbl-'+id); if(lb) lb.textContent=wi.cfg.label;
+    document.querySelector('#swgt-'+id+' .swgt-cfg-popover').classList.remove('open');
+};
+window._applyNotesCfg = function(id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return; if(!wi.cfg) wi.cfg={};
+    var fz=document.getElementById('swgt-cfgi-'+id);
+    var bg=document.getElementById('swgt-cfgb-'+id);
+    if(fz) wi.cfg.fontSize=parseInt(fz.value)||13;
+    if(bg) wi.cfg.bg=bg.value;
+    _saveWidgets();
+    var ta=document.querySelector('#swgt-'+id+' textarea'); if(ta) ta.style.fontSize=wi.cfg.fontSize+'px';
+    var body=document.querySelector('#swgt-'+id+' .swgt-body'); if(body&&wi.cfg.bg) body.style.background=wi.cfg.bg;
+    document.querySelector('#swgt-'+id+' .swgt-cfg-popover').classList.remove('open');
+};
+window._applyLinksCfg = function(id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return; if(!wi.cfg) wi.cfg={};
+    var ta=document.getElementById('swgt-cfgi-'+id);
+    if(!ta) return;
+    wi.cfg.links = ta.value.split('\
+').filter(Boolean).map(function(l){
+        var p=l.split('|'); return {label:p[0]||'Link', url:p[1]||'https://'};
+    });
+    _saveWidgets();
+    _renderQuickLinks(wi);
+    document.querySelector('#swgt-'+id+' .swgt-cfg-popover').classList.remove('open');
+};
+window._applySearchCfg = function(id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return; if(!wi.cfg) wi.cfg={};
+    var sel=document.getElementById('swgt-cfgi-'+id);
+    if(sel) wi.cfg.engine=sel.value;
+    _saveWidgets();
+    document.querySelector('#swgt-'+id+' .swgt-cfg-popover').classList.remove('open');
+};
+
+/* ── Quick links ─────────────────────────────────────────── */
+function _renderQuickLinks(wi) {
+    var grid = document.getElementById('swgt-ql-'+wi.id);
+    if(!grid) return;
+    var links = (wi.cfg&&wi.cfg.links)||[];
+    if(!links.length) { grid.innerHTML='<div style="color:rgba(232,234,246,0.3);font-size:12px;text-align:center;padding:8px">Open ⚙ to add links</div>'; return; }
+    grid.innerHTML = links.map(function(l){
+        var domain = l.url.replace(/https?:\\/\\//,'').split('/')[0];
+        var icon = 'https://www.google.com/s2/favicons?domain='+domain+'&sz=32';
+        return '<div class="swgt-ql-link" onclick="_wgtOpenLink(\''+l.url+'\')"><img src="'+icon+'" onerror="this.style.display=\'none\'"><span>'+l.label+'</span></div>';
+    }).join('');
+}
+window._wgtOpenLink = function(url) {
+    if(typeof toggleApp==='function' && APPS && APPS.web) { toggleApp('web'); } else { window.open(url,'_blank'); }
+};
+
+/* ── Search widget ───────────────────────────────────────── */
+window._wgtSearchKey = function(e,id) { if(e.key==='Enter') _wgtSearch(id); };
+window._wgtSearch = function(id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    var eng = (wi&&wi.cfg&&wi.cfg.engine)||'google';
+    var q = document.getElementById('swgt-si-'+id);
+    if(!q||!q.value.trim()) return;
+    var urls = {
+        google: 'https://google.com/search?q=',
+        bing:   'https://bing.com/search?q=',
+        ddg:    'https://duckduckgo.com/?q='
+    };
+    var url = (urls[eng]||urls.google) + encodeURIComponent(q.value);
+    _wgtOpenLink(url);
+};
+window._wgtSetEngine = function(btn,id) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return; if(!wi.cfg) wi.cfg={};
+    wi.cfg.engine = btn.dataset.eng;
+    _saveWidgets();
+    btn.closest('.swgt-search-engines').querySelectorAll('.swgt-search-eng').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+};
+
+/* ── Clock tick ──────────────────────────────────────────── */
+function _startClockWidget(wi) {
+    var id = wi.id;
     function tick() {
-        var t = document.getElementById('swgt-ct-'+id);
-        var d = document.getElementById('swgt-cd-'+id);
+        var t=document.getElementById('swgt-ct-'+id);
+        var s=document.getElementById('swgt-cs-'+id);
+        var d=document.getElementById('swgt-cd-'+id);
         if(!t) return;
-        var now=new Date(), h=now.getHours(), m=now.getMinutes(), s=now.getSeconds();
-        var ampm=h>=12?'PM':'AM', h12=h%12||12, ms=m<10?'0'+m:m;
-        t.textContent = h12+':'+ms+' '+ampm;
+        var now=new Date();
+        var wii=_widgetInstances.find(function(w){return w.id===id;});
+        var use24=wii&&wii.cfg&&wii.cfg.use24;
+        var h=now.getHours(), min=now.getMinutes(), sec=now.getSeconds();
+        var disp=use24?h:(h%12||12);
+        var ampm=use24?'':(h>=12?' PM':' AM');
+        t.textContent = disp+':'+(min<10?'0'+min:min)+ampm;
+        if(s) s.textContent = ':'+(sec<10?'0'+sec:sec);
         if(d) {
             var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
             var MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            d.textContent = DAYS[now.getDay()]+', '+MONS[now.getMonth()]+' '+now.getDate();
+            d.textContent = DAYS[now.getDay()]+', '+MONS[now.getMonth()]+' '+now.getDate()+' '+now.getFullYear();
         }
     }
-    tick(); setInterval(tick, 1000);
+    tick(); setInterval(tick,1000);
 }
 
+/* ── Sysmon ticks ────────────────────────────────────────── */
 function _startSysmon(id) {
-    setInterval(function() {
-        var c=document.getElementById('swgt-cpu-'+id);
-        var r=document.getElementById('swgt-ram-'+id);
-        var n=document.getElementById('swgt-net-'+id);
-        if(!c) return;
-        c.style.width = (15+Math.random()*70)+'%';
-        r.style.width = (40+Math.random()*40)+'%';
-        n.style.width = (50+Math.random()*45)+'%';
-    }, 2000);
+    function update() {
+        var cv=Math.round(15+Math.random()*70), rv=Math.round(40+Math.random()*45), nv=Math.round(5+Math.random()*90);
+        ['cpu','ram','net'].forEach(function(k,i){
+            var v=[cv,rv,nv][i];
+            var bar=document.getElementById('swgt-'+k+'-'+id);
+            var pct=document.getElementById('swgt-'+k+'p-'+id);
+            if(bar){ bar.style.width=v+'%'; bar.className='swgt-mon-fill'+(v>80?' crit':v>60?' warn':''); }
+            if(pct) pct.textContent=v+'%';
+        });
+    }
+    update(); setInterval(update,2000);
 }
 
-/* Widget dragging */
-var _wgtDrag = null;
-function _widgetDragStart(e, id) {
+/* ── Weather fetch ───────────────────────────────────────── */
+function _fetchWeather(wi) {
+    var id=wi.id, cfg=wi.cfg||{}, loc=cfg.location||'London', units=cfg.units||'celsius';
+    var wthrEl=document.getElementById('swgt-wc-'+id);
+    if(wthrEl) wthrEl.textContent='Loading...';
+    fetch('https://wttr.in/'+encodeURIComponent(loc)+'?format=j1')
+        .then(function(r){return r.json();})
+        .then(function(d){
+            var cc=d.current_condition&&d.current_condition[0];
+            if(!cc) return;
+            var temp = units==='fahrenheit' ? cc.temp_F+'°F' : cc.temp_C+'°C';
+            var icon = _weatherEmoji(parseInt(cc.weatherCode||0));
+            var cond = cc.weatherDesc&&cc.weatherDesc[0]&&cc.weatherDesc[0].value||'—';
+            var wind = cc.windspeedKmph+'km/h';
+            var hum  = cc.humidity+'%';
+            var feel = units==='fahrenheit' ? cc.FeelsLikeF+'°F' : cc.FeelsLikeC+'°C';
+            var t=document.getElementById('swgt-wt-'+id); if(t) t.textContent=(units==='fahrenheit'?cc.temp_F:cc.temp_C);
+            var u=document.getElementById('swgt-wt-'+id); // unit shown in HTML
+            var ic=document.getElementById('swgt-wi-'+id); if(ic) ic.textContent=icon;
+            var c=document.getElementById('swgt-wc-'+id); if(c) c.textContent=cond;
+            var w=document.getElementById('swgt-ww-'+id); if(w) w.textContent=wind;
+            var h=document.getElementById('swgt-wh-'+id); if(h) h.textContent=hum;
+            var f=document.getElementById('swgt-wf-'+id); if(f) f.textContent=feel;
+            // Update unit symbol
+            var el=document.querySelector('#swgt-'+id+' .swgt-weather-unit');
+            if(el) el.textContent=units==='fahrenheit'?'°F':'°C';
+        })
+        .catch(function(){
+            var c=document.getElementById('swgt-wc-'+id); if(c) c.textContent='Check location';
+        });
+}
+function _weatherEmoji(code) {
+    if(code<=113) return '☀️';
+    if(code<=176) return '⛅';
+    if(code<=260) return '🌫️';
+    if(code<=296) return '🌦️';
+    if(code<=395) return '🌧️';
+    return '⛅';
+}
+
+/* ── Countdown ───────────────────────────────────────────── */
+function _startCountdown(wi) {
+    var id=wi.id;
+    function tick() {
+        var cfg=wi.cfg||{};
+        var target=cfg.date?new Date(cfg.date):new Date(new Date().getFullYear()+1,0,1);
+        var now=new Date();
+        var diff=target-now;
+        if(diff<=0) {
+            var done=document.getElementById('swgt-cd-'+id);
+            if(done) done.innerHTML='<div class="swgt-cd-done">🎉 Done!</div>';
+            return;
+        }
+        var d=Math.floor(diff/864e5), h=Math.floor(diff%864e5/36e5);
+        var m=Math.floor(diff%36e5/6e4), s=Math.floor(diff%6e4/1e3);
+        [['D',d],['H',h],['M',m],['S',s]].forEach(function(pair){
+            var el=document.getElementById('swgt-cd'+pair[0]+'-'+id);
+            if(el) el.textContent=String(pair[1]).padStart(2,'0');
+        });
+    }
+    tick(); setInterval(tick,1000);
+}
+
+/* ── Quotes ──────────────────────────────────────────────── */
+var _QUOTES = [
+    {q:'The only way to do great work is to love what you do.',a:'Steve Jobs'},
+    {q:'Innovation distinguishes between a leader and a follower.',a:'Steve Jobs'},
+    {q:'Stay hungry, stay foolish.',a:'Steve Jobs'},
+    {q:'The future belongs to those who believe in the beauty of their dreams.',a:'Eleanor Roosevelt'},
+    {q:'It does not matter how slowly you go, as long as you do not stop.',a:'Confucius'},
+    {q:'Life is what happens to you while you\'re busy making other plans.',a:'John Lennon'},
+    {q:'The way to get started is to quit talking and begin doing.',a:'Walt Disney'},
+    {q:'If you are not willing to risk the usual, you will have to settle for the ordinary.',a:'Jim Rohn'},
+    {q:'Whether you think you can or you think you can\'t, you are right.',a:'Henry Ford'},
+    {q:'Believe you can and you\'re halfway there.',a:'Theodore Roosevelt'},
+    {q:'Act as if what you do makes a difference. It does.',a:'William James'},
+    {q:'Success is not final, failure is not fatal: it is the courage to continue that counts.',a:'Winston Churchill'},
+    {q:'Do what you can, with what you have, where you are.',a:'Theodore Roosevelt'},
+    {q:'The secret of getting ahead is getting started.',a:'Mark Twain'},
+];
+window._fetchQuote = function(id) {
+    var q=_QUOTES[Math.floor(Math.random()*_QUOTES.length)];
+    var qt=document.getElementById('swgt-qt-'+id); if(qt) qt.textContent='\''+q.q+'\''; 
+    var qa=document.getElementById('swgt-qa-'+id); if(qa) qa.textContent='— '+q.a;
+};
+
+/* ── Crypto ticker ───────────────────────────────────────── */
+function _fetchStocks(id) {
+    var container=document.getElementById('swgt-tck-'+id);
+    var coins=[{sym:'BTC',name:'Bitcoin'},{sym:'ETH',name:'Ethereum'},{sym:'SOL',name:'Solana'}];
+    function mockPrice(base,volatility){ return (base+(Math.random()-0.5)*volatility).toFixed(2); }
+    function mockChg(){ return ((Math.random()-0.45)*8).toFixed(2); }
+    function render() {
+        if(!container) return;
+        var prices={BTC:mockPrice(95000,3000),ETH:mockPrice(3200,200),SOL:mockPrice(170,15)};
+        container.innerHTML = coins.map(function(c){
+            var p=prices[c.sym], chg=mockChg(), up=chg>=0;
+            return '<div class="swgt-ticker-row">'+
+                '<span class="swgt-ticker-sym">'+c.sym+'</span>'+
+                '<div><span class="swgt-ticker-price">$'+parseFloat(p).toLocaleString()+'</span> '+
+                '<span class="swgt-ticker-chg '+(up?'swgt-up':'swgt-dn')+'">'+(up?'+':'')+chg+'%</span></div>'+
+                '</div>';
+        }).join('');
+    }
+    render(); setInterval(render,10000);
+}
+
+/* ── Widget dragging ─────────────────────────────────────── */
+var _wgtDrag=null;
+function _widgetDragStart(e,id) {
+    if(e.target.matches('input,textarea,select,button,.swgt-x,.swgt-icon-btn,.swgt-resize')) return;
     e.preventDefault();
-    var el = document.getElementById('swgt-'+id);
+    var el=document.getElementById('swgt-'+id);
     if(!el) return;
-    _wgtDrag = { id:id, el:el,
-        sx:e.clientX, sy:e.clientY,
-        ox:parseFloat(el.style.left)||0, oy:parseFloat(el.style.top)||0 };
-    el.style.zIndex = 300;
+    _wgtDrag={id:id,el:el,sx:e.clientX,sy:e.clientY,
+        ox:parseFloat(el.style.left)||0,oy:parseFloat(el.style.top)||0};
+    el.style.zIndex=300;
+    // close any open popovers
+    document.querySelectorAll('.swgt-cfg-popover.open').forEach(function(p){p.classList.remove('open');});
 }
-document.addEventListener('mousemove', function(e) {
-    if(!_wgtDrag) return;
-    _wgtDrag.el.style.left = (_wgtDrag.ox + e.clientX - _wgtDrag.sx) + 'px';
-    _wgtDrag.el.style.top  = (_wgtDrag.oy + e.clientY - _wgtDrag.sy) + 'px';
+document.addEventListener('mousemove',function(e){
+    if(_wgtDrag){
+        _wgtDrag.el.style.left=(_wgtDrag.ox+e.clientX-_wgtDrag.sx)+'px';
+        _wgtDrag.el.style.top =(_wgtDrag.oy+e.clientY-_wgtDrag.sy)+'px';
+    }
+    if(_wgtResize){
+        var nw=Math.max(180,_wgtResize.sw+(e.clientX-_wgtResize.sx));
+        var nh=Math.max(80, _wgtResize.sh+(e.clientY-_wgtResize.sy));
+        _wgtResize.el.style.width =nw+'px';
+        _wgtResize.el.style.height=nh+'px';
+        // Resize textarea inside notes widget
+        var ta=_wgtResize.el.querySelector('textarea');
+        if(ta) ta.style.height=(nh-30-20)+'px';
+    }
 });
-document.addEventListener('mouseup', function() {
-    if(!_wgtDrag) return;
-    var wi = _widgetInstances.find(function(w){return w.id===_wgtDrag.id;});
-    if(wi) { wi.x=parseFloat(_wgtDrag.el.style.left)||0; wi.y=parseFloat(_wgtDrag.el.style.top)||0; _saveWidgets(); }
-    _wgtDrag.el.style.zIndex = 80;
-    _wgtDrag = null;
+document.addEventListener('mouseup',function(){
+    if(_wgtDrag){
+        var wi=_widgetInstances.find(function(w){return w.id===_wgtDrag.id;});
+        if(wi){wi.x=parseFloat(_wgtDrag.el.style.left)||0;wi.y=parseFloat(_wgtDrag.el.style.top)||0;_saveWidgets();}
+        _wgtDrag.el.style.zIndex=80; _wgtDrag=null;
+    }
+    if(_wgtResize){
+        var wi=_widgetInstances.find(function(w){return w.id===_wgtResize.id;});
+        if(wi){wi.w=parseFloat(_wgtResize.el.style.width)||null;wi.h=parseFloat(_wgtResize.el.style.height)||null;_saveWidgets();}
+        _wgtResize=null;
+    }
 });
 
+/* ── Widget resizing ─────────────────────────────────────── */
+var _wgtResize=null;
+window._widgetResizeStart=function(e,id){
+    e.preventDefault(); e.stopPropagation();
+    var el=document.getElementById('swgt-'+id);
+    if(!el) return;
+    _wgtResize={id:id,el:el,sx:e.clientX,sy:e.clientY,
+        sw:el.offsetWidth,sh:el.offsetHeight};
+};
+
+/* ── Sidebar stats updater ───────────────────────────────── */
+function _startSidebarStats() {
+    var startTime=Date.now();
+    setInterval(function(){
+        var upEl=document.getElementById('sb-uptime');
+        if(upEl){
+            var min=Math.floor((Date.now()-startTime)/60000);
+            upEl.textContent=min<60?min+'m':Math.floor(min/60)+'h '+min%60+'m';
+        }
+        var wc=document.getElementById('sb-wincount');
+        if(wc) wc.textContent=document.querySelectorAll('.window.active:not(.minimized)').length;
+        var wgt=document.getElementById('sb-wgtcount');
+        if(wgt) wgt.textContent=_widgetInstances.length;
+        var lbl=document.getElementById('sb-wgtcount-label');
+        if(lbl) lbl.textContent=_widgetInstances.length+' active';
+    },5000);
+}
 
 /* ── FULLSCREEN MESSAGE HANDLER ─────────────────────────────
    Minecraft (and any app) can postMessage to request fullscreen
