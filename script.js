@@ -2169,7 +2169,7 @@ function _renderQuickLinks(wi) {
     var links = (wi.cfg&&wi.cfg.links)||[];
     if(!links.length) { grid.innerHTML='<div style="color:rgba(232,234,246,0.3);font-size:12px;text-align:center;padding:8px">Open ⚙ to add links</div>'; return; }
     grid.innerHTML = links.map(function(l){
-        var domain = l.url.replace(/https?:\\/\\//,'').split('/')[0];
+        var domain = l.url.replace('https://','').replace('http://','').split('/')[0];
         var icon = 'https://www.google.com/s2/favicons?domain='+domain+'&sz=32';
         return '<div class="swgt-ql-link" onclick="_wgtOpenLink(\''+l.url+'\')"><img src="'+icon+'" onerror="this.style.display=\'none\'"><span>'+l.label+'</span></div>';
     }).join('');
