@@ -61,41 +61,7 @@
 </header>
 
 <!-- Right Sidebar refactored with BEM and Semantic tags -->
-<aside id="right-sidebar" aria-label="Quick Access Widget">
-  <section class="sidebar__section">
-    <h3 class="sidebar__title">Jump Back In!</h3>
-    <div class="sidebar__card" id="last-played-game" onclick="launchLastPlayed()" role="button" tabindex="0">
-      <img id="last-game-icon" src="https://cdn-icons-png.flaticon.com/512/732/732244.png" alt="Game Icon">
-      <div class="sidebar__info">
-        <strong id="last-game-name">No Recent Game</strong>
-        <small>PS5 Emu</small>
-      </div>
-    </div>
-  </section>
-
-  <section class="sidebar__section">
-    <h3 class="sidebar__title">Quick Play</h3>
-    <div class="sidebar__card" id="spotify-quick-play" onclick="resumeSpotify()" role="button" tabindex="0">
-      <img id="spotify-album-art" src="https://cdn.pixabay.com/photo/2016/10/22/00/15/spotify-1759471_1280.jpg" alt="Album Cover">
-      <div class="sidebar__info">
-        <strong id="spotify-track-name">Not Playing</strong>
-        <small>Spotify</small>
-      </div>
-      <i class="fas fa-play play-overlay" aria-hidden="true"></i>
-    </div>
-  </section>
-
-  <section class="sidebar__section">
-    <h3 class="sidebar__title">System Status</h3>
-    <div class="sidebar__card update-card" onclick="openUpdateLog()" role="button" tabindex="0">
-      <div class="sidebar__info">
-        <strong class="txt-highlight">Update Log</strong>
-        <small>View latest patches</small>
-      </div>
-      <i class="fas fa-chevron-right sidebar__chevron" aria-hidden="true"></i>
-    </div>
-  </section>
-</aside>
+<!-- Right sidebar removed — use desktop widgets instead (right-click → Add Widget) -->
 
 <div id="drag-proxy" aria-hidden="true">
   <div id="folder-badge" class="hidden-badge">2</div>
