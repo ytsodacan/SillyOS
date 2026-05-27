@@ -5,7 +5,7 @@ var APPS = {
     'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true, openMode: "iframe"   // or "newtab" or "redirect"
 },
     'games': {title: 'Game Library', path: 'script/Apps/Games/index.html', icon: 'script/Apps/Games/icon.png', pinned: true, openMode: "iframe"},   // or "newtab" or "redirect"},
-    'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'script/Apps/Web/IMG_3473.jpeg', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
+    'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'script/Apps/Web/IMG_3473.png', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
 },
     'spotify': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'script/Apps/Spotify/IMG_3472.png', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
 },
