@@ -1541,18 +1541,9 @@ function injectWidgetEditor() {
         box-shadow:0 8px 32px rgba(0,0,0,0.6);
         animation:sillywgtIn .25s cubic-bezier(.34,1.56,.64,1); }
     @keyframes sillywgtIn { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
-    .swgt-shell { border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.09); }
-    .swgt-bar { height:30px; background:rgba(8,10,20,0.7); backdrop-filter:blur(20px);
-        border-bottom:1px solid rgba(255,255,255,0.07);
-        display:flex; align-items:center; justify-content:space-between; padding:0 10px;
-        cursor:grab; font-size:11px; color:rgba(232,234,246,0.4); font-family:'Rajdhani',sans-serif; gap:8px; }
-    .swgt-bar:active { cursor:grabbing; }
-    .swgt-bar-left { display:flex; align-items:center; gap:6px; flex:1; min-width:0; overflow:hidden; white-space:nowrap; }
-    .swgt-bar-right { display:flex; align-items:center; gap:4px; flex-shrink:0; }
-    .swgt-icon-btn { background:transparent; border:none; color:rgba(232,234,246,0.35);
-        cursor:pointer; font-size:13px; line-height:1; padding:0 3px; transition:color .15s; }
-    .swgt-icon-btn:hover { color:#e8eaf6; }
-    .swgt-x:hover { color:#ff5f57 !important; }
+    .swgt-shell { border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.09);
+        cursor:grab; }
+    .swgt-shell:active { cursor:grabbing; }
     .swgt-body { background:rgba(10,12,24,0.9); backdrop-filter:blur(20px); }
 
     /* Resize handle */
@@ -1826,14 +1817,7 @@ function _createWidget(wi) {
     var cfgHTML  = _buildWidgetCfg(wi);
 
     el.innerHTML =
-        '<div class="swgt-shell">' +
-        '<div class="swgt-bar" onmousedown="_widgetDragStart(event,\''+wi.id+'\')">'+
-            '<div class="swgt-bar-left">'+def.emoji+' <span>'+def.label+'</span></div>'+
-            '<div class="swgt-bar-right">'+
-                '<button class="swgt-icon-btn" title="Settings" onclick="event.stopPropagation();_toggleWgtCfg(this)">⚙</button>'+
-                '<button class="swgt-icon-btn swgt-x" title="Close" onclick="_removeWidgetById(\''+wi.id+'\')">✕</button>'+
-            '</div>'+
-        '</div>'+
+        '<div class="swgt-shell" onmousedown="_widgetDragStart(event,\''+wi.id+'\')" oncontextmenu="_widgetCtx(event,\''+wi.id+'\')">' +
         '<div class="swgt-body">'+bodyHTML+'</div>'+
         '</div>'+
         cfgHTML +
@@ -1882,6 +1866,57 @@ window._toggleWgtCfg = function(btn) {
     var pop = shell.querySelector('.swgt-cfg-popover');
     if(pop) pop.classList.toggle('open');
 };
+
+/* ── Widget right-click context menu ─────────────────────── */
+(function() {
+    var menu = document.createElement('div');
+    menu.id = 'swgt-ctx-menu';
+    menu.style.cssText = 'display:none;position:fixed;z-index:9700;background:rgba(10,12,24,0.97);' +
+        'border:1px solid rgba(255,255,255,0.12);border-radius:10px;' +
+        'box-shadow:0 12px 32px rgba(0,0,0,0.7);padding:6px;min-width:170px;';
+    menu.innerHTML =
+        '<div id="swgt-ctx-label" style="padding:8px 12px 6px;font-size:10px;letter-spacing:2px;' +
+            'text-transform:uppercase;color:rgba(232,234,246,0.35);font-family:Rajdhani,sans-serif;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:4px;"></div>' +
+        '<button id="swgt-ctx-cfg"    style="' + _wgtCtxBtnStyle() + '">⚙  Settings</button>' +
+        '<button id="swgt-ctx-remove" style="' + _wgtCtxBtnStyle('#ff5f57') + '">✕  Remove Widget</button>';
+    document.body.appendChild(menu);
+
+    var _ctxId = null;
+
+    window._widgetCtx = function(e, id) {
+        e.preventDefault(); e.stopPropagation();
+        _ctxId = id;
+        var wi = _widgetInstances.find(function(w){ return w.id === id; });
+        var def = wi ? (WIDGET_DEFS.find(function(d){ return d.type === wi.type; }) || {label: wi.type, emoji:'📦'}) : {label:'Widget',emoji:'📦'};
+        document.getElementById('swgt-ctx-label').textContent = def.emoji + '  ' + def.label;
+        menu.style.display = 'block';
+        // Position near cursor, keep on screen
+        var mx = Math.min(e.clientX, window.innerWidth  - 180);
+        var my = Math.min(e.clientY, window.innerHeight - 100);
+        menu.style.left = mx + 'px';
+        menu.style.top  = my + 'px';
+    };
+
+    document.getElementById('swgt-ctx-cfg').onclick = function() {
+        if(!_ctxId) return;
+        var el = document.getElementById('swgt-' + _ctxId);
+        if(el) { var pop = el.querySelector('.swgt-cfg-popover'); if(pop) pop.classList.toggle('open'); }
+        menu.style.display = 'none';
+    };
+    document.getElementById('swgt-ctx-remove').onclick = function() {
+        if(_ctxId) _removeWidgetById(_ctxId);
+        menu.style.display = 'none';
+    };
+
+    document.addEventListener('click', function() { menu.style.display = 'none'; });
+    document.addEventListener('keydown', function(e) { if(e.key==='Escape') menu.style.display='none'; });
+})();
+
+function _wgtCtxBtnStyle(color) {
+    return 'display:block;width:100%;background:transparent;border:none;padding:9px 14px;' +
+        'border-radius:6px;cursor:pointer;font-size:13px;color:' + (color||'rgba(232,234,246,0.75)') + ';' +
+        'font-family:Rajdhani,sans-serif;text-align:left;transition:background .15s;';
+}
 
 /* close all cfg popovers on outside click */
 document.addEventListener('click', function(e){
@@ -2317,7 +2352,8 @@ function _fetchStocks(id) {
 /* ── Widget dragging ─────────────────────────────────────── */
 var _wgtDrag=null;
 function _widgetDragStart(e,id) {
-    if(e.target.matches('input,textarea,select,button,.swgt-x,.swgt-icon-btn,.swgt-resize')) return;
+    if(e.target.matches('input,textarea,select,button,.swgt-resize')) return;
+    if(e.target.closest('.swgt-cfg-popover')) return;
     e.preventDefault();
     var el=document.getElementById('swgt-'+id);
     if(!el) return;
