@@ -2,221 +2,133 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Browser</title>
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background: #0d0d0d; font-family: -apple-system, sans-serif; }
-
-        /* ── Nav bar ─────────────────────────── */
-        #nav {
-            position: fixed; top: 0; left: 0; right: 0; height: 44px; z-index: 9999;
-            background: rgba(18,18,18,0.92); backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            display: flex; align-items: center; gap: 6px; padding: 0 10px;
-        }
-        .nav-btn {
-            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7); width: 32px; height: 28px; border-radius: 6px;
-            cursor: pointer; font-size: 14px; display: flex; align-items: center;
-            justify-content: center; transition: background 0.15s; flex-shrink: 0;
-        }
-        .nav-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        .nav-btn:disabled { opacity: 0.3; cursor: default; }
-
-        #url-bar-wrap {
-            flex: 1; display: flex; align-items: center;
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px; height: 30px; padding: 0 10px; gap: 6px;
-            transition: border-color 0.2s;
-        }
-        #url-bar-wrap:focus-within { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); }
-        #lock-icon { color: rgba(255,255,255,0.35); font-size: 11px; flex-shrink: 0; }
-        #url-input {
-            flex: 1; background: none; border: none; outline: none;
-            color: rgba(255,255,255,0.85); font-size: 13px; min-width: 0;
-        }
-        #url-input::placeholder { color: rgba(255,255,255,0.3); }
-
-        #go-btn {
-            background: #5865f2; border: none; color: white; padding: 0 12px;
-            height: 28px; border-radius: 6px; cursor: pointer; font-size: 12px;
-            font-weight: 600; flex-shrink: 0; transition: background 0.15s;
-        }
-        #go-btn:hover { background: #4752c4; }
-
-        /* ── Iframe ────────────────────────── */
-        #proxy-frame {
-            position: fixed; inset: 44px 0 0 0;
-            width: 100%; height: calc(100% - 44px);
-            border: none; background: #0d0d0d;
-        }
-
-        /* ── Loading bar ───────────────────── */
-        #loading-bar {
-            position: fixed; top: 44px; left: 0; height: 2px; width: 0;
-            background: linear-gradient(90deg, #5865f2, #9f6ef5);
-            z-index: 9998; transition: width 0.3s;
-        }
-
-        /* ── Home screen (shown before any nav) */
-        #home {
-            position: fixed; inset: 44px 0 0 0;
-            background: #0d0d0d; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 12px;
-        }
-        #home h1 { color: rgba(255,255,255,0.12); font-size: 52px; font-weight: 800; letter-spacing: 3px; }
-        #home p  { color: rgba(255,255,255,0.25); font-size: 13px; }
-        .quick-link {
-            display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; justify-content: center;
-        }
-        .ql-btn {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 8px;
-            cursor: pointer; font-size: 12px; transition: all 0.15s;
-        }
-        .ql-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{width:100%;height:100%;overflow:hidden;background:#0d0d0d;font-family:-apple-system,sans-serif}
+        #nav{position:fixed;top:0;left:0;right:0;height:44px;z-index:9999;background:rgba(18,18,18,0.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:6px;padding:0 10px}
+        .nbtn{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);width:32px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+        .nbtn:hover{background:rgba(255,255,255,0.15);color:#fff}
+        .nbtn:disabled{opacity:0.3;cursor:default}
+        #ubar{flex:1;display:flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;height:30px;padding:0 10px;gap:6px;transition:border-color .2s}
+        #ubar:focus-within{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.1)}
+        #url{flex:1;background:none;border:none;outline:none;color:rgba(255,255,255,0.85);font-size:13px;min-width:0}
+        #url::placeholder{color:rgba(255,255,255,0.3)}
+        #gobtn{background:#5865f2;border:none;color:#fff;padding:0 12px;height:28px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0;transition:background .15s}
+        #gobtn:hover{background:#4752c4}
+        #lbar{position:fixed;top:44px;left:0;height:2px;width:0;background:linear-gradient(90deg,#5865f2,#9f6ef5);z-index:9998;transition:width .3s}
+        #frame{position:fixed;inset:44px 0 0 0;width:100%;height:calc(100% - 44px);border:none;background:#0d0d0d}
+        #home{position:fixed;inset:44px 0 0 0;background:#0d0d0d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+        #home h1{color:rgba(255,255,255,0.08);font-size:56px;font-weight:800;letter-spacing:4px}
+        #home p{color:rgba(255,255,255,0.2);font-size:12px}
+        .qs{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+        .qb{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.45);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;transition:all .15s}
+        .qb:hover{background:rgba(255,255,255,0.1);color:#fff}
     </style>
 </head>
 <body>
-
 <div id="nav">
-    <button class="nav-btn" id="btn-back"    title="Back"    onclick="histNav(-1)">&#8592;</button>
-    <button class="nav-btn" id="btn-forward" title="Forward" onclick="histNav(1)" disabled>&#8594;</button>
-    <button class="nav-btn" id="btn-reload"  title="Reload"  onclick="reload()">&#8635;</button>
-
-    <div id="url-bar-wrap">
-        <span id="lock-icon">🔒</span>
-        <input id="url-input" type="text" placeholder="Search or enter a URL..."
-               spellcheck="false" autocomplete="off"
-               onkeydown="if(event.key==='Enter') navigate(this.value)">
+    <button class="nbtn" id="bb" onclick="hNav(-1)" disabled>&#8592;</button>
+    <button class="nbtn" id="fb" onclick="hNav(1)"  disabled>&#8594;</button>
+    <button class="nbtn" onclick="rl()">&#8635;</button>
+    <div id="ubar">
+        <span style="color:rgba(255,255,255,0.3);font-size:11px;flex-shrink:0">🔒</span>
+        <input id="url" type="text" placeholder="Search or enter a URL..." spellcheck="false" autocomplete="off"
+            onkeydown="if(event.key==='Enter')go(this.value)">
     </div>
-
-    <button id="go-btn" onclick="navigate(document.getElementById('url-input').value)">Go</button>
+    <button id="gobtn" onclick="go(document.getElementById('url').value)">Go</button>
 </div>
-
-<div id="loading-bar"></div>
-
+<div id="lbar"></div>
 <div id="home">
     <h1>BROWSER</h1>
-    <p>Powered by relay.neurosama.place — type a URL above or pick a quick link</p>
-    <div class="quick-link">
-        <button class="ql-btn" onclick="navigate('google.com')">Google</button>
-        <button class="ql-btn" onclick="navigate('youtube.com')">YouTube</button>
-        <button class="ql-btn" onclick="navigate('open.spotify.com')">Spotify</button>
-        <button class="ql-btn" onclick="navigate('discord.com/app')">Discord</button>
-        <button class="ql-btn" onclick="navigate('reddit.com')">Reddit</button>
-        <button class="ql-btn" onclick="navigate('github.com')">GitHub</button>
+    <p>Powered by relay.neurosama.place (Scramjet)</p>
+    <div class="qs">
+        <button class="qb" onclick="go('google.com')">Google</button>
+        <button class="qb" onclick="go('youtube.com')">YouTube</button>
+        <button class="qb" onclick="go('open.spotify.com')">Spotify</button>
+        <button class="qb" onclick="go('discord.com/app')">Discord</button>
+        <button class="qb" onclick="go('reddit.com')">Reddit</button>
+        <button class="qb" onclick="go('github.com')">GitHub</button>
+        <button class="qb" onclick="loadProxy()">🏠 Proxy Home</button>
     </div>
 </div>
-
-<iframe id="proxy-frame" src="about:blank"
-    allowfullscreen
+<iframe id="frame" src="about:blank" allowfullscreen
     allow="autoplay; fullscreen; gamepad; pointer-lock; clipboard-read; clipboard-write; microphone; camera"
-    referrerpolicy="no-referrer">
-</iframe>
-
+    referrerpolicy="no-referrer"></iframe>
 <script>
-    var BASE = 'https://relay.neurosama.place/';
-    var frame = document.getElementById('proxy-frame');
-    var urlInput = document.getElementById('url-input');
+    var PROXY = 'https://relay.neurosama.place/';
+    var fr = document.getElementById('frame');
+    var urlInp = document.getElementById('url');
     var home = document.getElementById('home');
-    var loadBar = document.getElementById('loading-bar');
-    var history_ = []; // simple history stack
-    var histIdx = -1;
-    var loaded = false;
+    var lb = document.getElementById('lbar');
+    var hist = [], hi = -1;
 
-    function fullUrl(raw) {
+    function norm(raw) {
         raw = raw.trim();
         if (!raw) return '';
-        // If it looks like a URL without protocol, add https://
-        if (!/^https?:\/\//i.test(raw) && raw.includes('.') && !raw.includes(' ')) {
-            raw = 'https://' + raw;
-        }
-        // If it looks like a search query, use Google
-        if (!/^https?:\/\//i.test(raw)) {
-            raw = 'https://www.google.com/search?q=' + encodeURIComponent(raw);
-        }
-        return raw;
+        if (/^https?:\/\//i.test(raw)) return raw;
+        if (raw.includes('.') && !raw.includes(' ')) return 'https://' + raw;
+        return 'https://www.google.com/search?q=' + encodeURIComponent(raw);
     }
 
-    function navigate(input) {
-        var url = fullUrl(input);
-        if (!url) return;
+    // Build the scramjet proxy URL.
+    // relay.neurosama.place uses Scramjet — the standard encoding is
+    // base64url of the target URL appended after the proxy root.
+    function proxyUrl(url) {
+        try {
+            // Standard scramjet path format
+            var b64 = btoa(url).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+            return PROXY + '~/uJDQ=/' + b64;
+        } catch(e) {
+            return PROXY;
+        }
+    }
 
-        urlInput.value = url;
+    function loadProxy() {
         home.style.display = 'none';
-
-        // Push to history
-        histIdx++;
-        history_ = history_.slice(0, histIdx);
-        history_.push(url);
-        updateHistBtns();
-
-        // Load through proxy
+        urlInp.value = PROXY;
         startLoad();
-        // relay.neurosama.place is a Scramjet proxy — load the proxy root first,
-        // then navigate to the target via the proxy's service worker
-        frame.src = BASE;
-
-        // After the proxy's SW registers, navigate internally
-        frame.onload = function() {
-            stopLoad();
-            // Try to navigate within the proxy to the target URL
-            try {
-                frame.contentWindow.location.href = url;
-            } catch(e) {
-                // Cross-origin fallback: just show the proxy homepage
-            }
-        };
-
-        loaded = true;
+        fr.src = PROXY;
+        fr.onload = function(){ stopLoad(); };
     }
 
-    function histNav(dir) {
-        histIdx += dir;
-        if (histIdx < 0) histIdx = 0;
-        if (histIdx >= history_.length) histIdx = history_.length - 1;
-        updateHistBtns();
-        var url = history_[histIdx];
-        urlInput.value = url;
+    function go(input) {
+        var url = norm(input);
+        if (!url) { loadProxy(); return; }
+        home.style.display = 'none';
+        urlInp.value = url;
+        hist = hist.slice(0, hi + 1);
+        hist.push(url); hi++;
+        updBtns();
         startLoad();
-        frame.src = BASE;
-        frame.onload = function() {
-            stopLoad();
-            try { frame.contentWindow.location.href = url; } catch(e) {}
-        };
+        // Navigate via proxy
+        fr.src = proxyUrl(url);
+        fr.onload = function() { stopLoad(); };
     }
 
-    function reload() {
-        if (frame.src && frame.src !== 'about:blank') {
-            startLoad();
-            frame.src = frame.src;
-            frame.onload = function() { stopLoad(); };
-        }
+    function hNav(d) {
+        hi = Math.max(0, Math.min(hist.length - 1, hi + d));
+        updBtns();
+        startLoad();
+        fr.src = proxyUrl(hist[hi]);
+        urlInp.value = hist[hi];
+        fr.onload = function(){ stopLoad(); };
     }
 
-    function updateHistBtns() {
-        document.getElementById('btn-back').disabled    = histIdx <= 0;
-        document.getElementById('btn-forward').disabled = histIdx >= history_.length - 1;
+    function rl() {
+        if (fr.src && fr.src !== 'about:blank') { startLoad(); fr.src = fr.src; fr.onload = function(){ stopLoad(); }; }
     }
 
-    function startLoad() {
-        loadBar.style.width = '40%';
-        loadBar.style.transition = 'width 1s ease';
-    }
-    function stopLoad() {
-        loadBar.style.width = '100%';
-        loadBar.style.transition = 'width 0.2s';
-        setTimeout(function() { loadBar.style.width = '0'; loadBar.style.transition = 'none'; }, 300);
+    function updBtns() {
+        document.getElementById('bb').disabled = hi <= 0;
+        document.getElementById('fb').disabled = hi >= hist.length - 1;
     }
 
-    // Keyboard shortcut: Ctrl+L focuses address bar
+    function startLoad(){ lb.style.width='40%'; lb.style.transition='width 1.2s ease'; }
+    function stopLoad(){ lb.style.width='100%'; lb.style.transition='width .2s'; setTimeout(function(){ lb.style.width='0'; lb.style.transition='none'; },300); }
+
     document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
-            e.preventDefault();
-            urlInput.focus(); urlInput.select();
-        }
+        if((e.ctrlKey||e.metaKey)&&e.key==='l'){ e.preventDefault(); urlInp.focus(); urlInp.select(); }
     });
 </script>
 </body>
