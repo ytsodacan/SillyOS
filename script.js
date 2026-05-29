@@ -2,15 +2,12 @@ var _SYSTEM_PATHS = ["C:/Windows/System32/kernel32.dll", "/var/www/html/cine-os/
 var _devBuildVer = "3.0.1";
 
 var APPS = {
-    'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true, openMode: "iframe"   // or "newtab" or "redirect"
-},
-    'games': {title: 'Game Library', path: 'script/Apps/Games/index.html', icon: 'script/Apps/Games/icon.png', pinned: true, openMode: "iframe"},   // or "newtab" or "redirect"},
-    'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'script/Apps/Web/IMG_3473.png', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
-},
-    'spotify': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'script/Apps/Spotify/IMG_3472.png', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
-},
-    'settings': {title: 'Settings', internal: true, icon: 'script/Apps/IMG_3469.png', pinned: true, openMode: "iframe"   // or "newtab" or "redirect"
-},
+    'minecraft': {title: 'Minecraft', path: 'script/Apps/Minecraft/index.html', icon: 'script/Apps/Minecraft/icon.png', pinned: true, windowed: true, openMode: "iframe"},
+    'games': {title: 'Games', path: 'script/Apps/Games/index.html', icon: 'script/Apps/Games/icon.png', pinned: true, openMode: "iframe"},
+    'plinko': {title: 'Plinko', path: 'script/Apps/Plinko/index.html', icon: 'script/Apps/Plinko/plinko.png', pinned: false, openMode: "iframe"},
+    'web': {title: 'Browser', path: 'script/Apps/Web/index.html', icon: 'script/Apps/Web/IMG_3473.png', pinned: true, openMode: "iframe"},
+    'spotify': {title: 'Spotify', path: 'script/Apps/Spotify/index.html', icon: 'script/Apps/Spotify/IMG_3472.png', pinned: true, openMode: "iframe"},
+    'settings': {title: 'Settings', internal: true, icon: 'script/Apps/IMG_3469.png', pinned: true, openMode: "iframe"},
 };
 
 var savedPins = localStorage.getItem('silly_pins_v5');
