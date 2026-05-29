@@ -3061,3 +3061,4 @@ window.addEventListener('message', function(e) {
         }
     } catch(err) { console.warn('SillyOS fullscreen error:', err); }
 });
+// cache bust 1780027806
