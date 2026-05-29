@@ -919,9 +919,10 @@ var DragSystem = {
         this.winStartLeft = parseFloat(win.style.left) || 0;
         this.winStartTop  = parseFloat(win.style.top)  || 0;
         this.isDragMove = false;
-        // Bring to front
         win.style.zIndex = ++highestZ;
         activeWindowId = id;
+        // Disable iframe pointer events so mousemove isn't lost
+        document.querySelectorAll('iframe').forEach(function(f){f.style.pointerEvents='none';});
     },
     
     move: function(e) {
@@ -977,11 +978,13 @@ var DragSystem = {
         this.resizeStartW = win.offsetWidth;
         this.resizeStartH = win.offsetHeight;
         win.style.zIndex = ++highestZ;
+        document.querySelectorAll('iframe').forEach(function(f){f.style.pointerEvents='none';});
     },
 
     end: function(e) {
         if(this.resizing) {
             this.resizing = false; this.resizeEl = null;
+            document.querySelectorAll('iframe').forEach(function(f){f.style.pointerEvents='';});
         }
         if(!this.sourceEl) return;
         if(!this.isDragMove && this.sourceType === 'desktop') { this.reset(); return; }
@@ -1471,16 +1474,23 @@ function _saveWidgets() {
 }
 
 var WIDGET_DEFS = [
-    {type:'clock',      label:'Clock',          desc:'Live digital clock',             emoji:'🕐', bg:'#4f67d8'},
-    {type:'calendar',   label:'Calendar',        desc:'This month at a glance',         emoji:'📅', bg:'#7c5cbf'},
-    {type:'weather',    label:'Weather',         desc:'Live weather — set your city',    emoji:'⛅', bg:'#1a7ba0'},
-    {type:'sysmon',     label:'System Monitor',  desc:'CPU & memory meters',            emoji:'📊', bg:'#2a7d4f'},
-    {type:'notes',      label:'Quick Notes',     desc:'Sticky note on your desktop',    emoji:'📝', bg:'#b07a1a'},
-    {type:'quicklinks', label:'Quick Links',     desc:'Saved website shortcuts',        emoji:'🔗', bg:'#c0392b'},
-    {type:'countdown',  label:'Countdown',       desc:'Count down to any date',         emoji:'⏳', bg:'#8e44ad'},
-    {type:'search',     label:'Web Search',      desc:'Search Google from desktop',     emoji:'🔍', bg:'#2c3e50'},
-    {type:'quote',      label:'Daily Quote',     desc:'Inspiring quote of the day',     emoji:'💬', bg:'#16a085'},
-    {type:'stocks',     label:'Crypto Ticker',   desc:'Live BTC/ETH prices',            emoji:'📈', bg:'#1a5276'},
+    {type:'clock',      label:'Clock',           desc:'Live digital clock',              emoji:'🕐', bg:'#4f67d8'},
+    {type:'calendar',   label:'Calendar',         desc:'This month at a glance',          emoji:'📅', bg:'#7c5cbf'},
+    {type:'weather',    label:'Weather',          desc:'Live weather — set your city',    emoji:'⛅', bg:'#1a7ba0'},
+    {type:'sysmon',     label:'System Monitor',   desc:'CPU & memory meters',             emoji:'📊', bg:'#2a7d4f'},
+    {type:'notes',      label:'Quick Notes',      desc:'Sticky note on your desktop',     emoji:'📝', bg:'#b07a1a'},
+    {type:'quicklinks', label:'Quick Links',      desc:'Saved website shortcuts',         emoji:'🔗', bg:'#c0392b'},
+    {type:'countdown',  label:'Countdown',        desc:'Count down to any date',          emoji:'⏳', bg:'#8e44ad'},
+    {type:'search',     label:'Web Search',       desc:'Search Google from desktop',      emoji:'🔍', bg:'#2c3e50'},
+    {type:'quote',      label:'Daily Quote',      desc:'Inspiring quote of the day',      emoji:'💬', bg:'#16a085'},
+    {type:'stocks',     label:'Crypto Ticker',    desc:'Live BTC/ETH prices',             emoji:'📈', bg:'#1a5276'},
+    {type:'todo',       label:'To-Do List',       desc:'Checklist for tasks',             emoji:'✅', bg:'#1e6b45'},
+    {type:'timer',      label:'Stopwatch',        desc:'Stopwatch & countdown timer',     emoji:'⏱', bg:'#7b3f00'},
+    {type:'calculator', label:'Calculator',       desc:'Quick maths calculator',          emoji:'🧮', bg:'#2d2d3a'},
+    {type:'worldclock', label:'World Clock',      desc:'Multiple time zones at once',     emoji:'🌍', bg:'#1a3a5c'},
+    {type:'pomodoro',   label:'Pomodoro',         desc:'25/5 focus timer',                emoji:'🍅', bg:'#8b1a1a'},
+    {type:'color',      label:'Color Picker',     desc:'Palette & colour tool',           emoji:'🎨', bg:'#4a1a6b'},
+    {type:'news',       label:'RSS Headlines',    desc:'Latest news headlines',           emoji:'📰', bg:'#1a3a1a'},
 ];
 
 /* ── Widget Editor Injection ──────────────────────────────── */
@@ -1538,13 +1548,14 @@ function injectWidgetEditor() {
     /* ── Desktop widget shell ──────────────────────────── */
     .silly-desk-widget { position:fixed; z-index:80; user-select:none;
         border-radius:14px; overflow:visible;
-        box-shadow:0 8px 32px rgba(0,0,0,0.6);
         animation:sillywgtIn .25s cubic-bezier(.34,1.56,.64,1); }
     @keyframes sillywgtIn { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
     .swgt-shell { border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.09);
-        cursor:grab; }
+        cursor:grab; width:100%; height:100%; display:flex; flex-direction:column;
+        box-sizing:border-box; box-shadow:0 8px 32px rgba(0,0,0,0.6); }
     .swgt-shell:active { cursor:grabbing; }
-    .swgt-body { background:rgba(10,12,24,0.9); backdrop-filter:blur(20px); }
+    .swgt-body { background:rgba(10,12,24,0.9); backdrop-filter:blur(20px);
+        flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; }
 
     /* Resize handle */
     .swgt-resize { position:absolute; bottom:0; right:0; width:18px; height:18px;
@@ -1553,7 +1564,7 @@ function injectWidgetEditor() {
     .silly-desk-widget:hover .swgt-resize svg { opacity:0.7; }
 
     /* ── Per-widget config popover ─────────────────────── */
-    .swgt-cfg-popover { position:absolute; top:32px; right:0; z-index:500;
+    .swgt-cfg-popover { position:absolute; top:4px; left:calc(100% + 8px); z-index:9600;
         background:rgba(10,12,24,0.97); border:1px solid rgba(255,255,255,0.12);
         border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,0.7);
         padding:14px 16px; min-width:220px; display:none; flex-direction:column; gap:10px;
@@ -1613,11 +1624,14 @@ function injectWidgetEditor() {
     .swgt-mon-fill { height:100%; border-radius:4px; background:#6c8fff; transition:width 1s ease; }
     .swgt-mon-fill.warn { background:#febc2e; } .swgt-mon-fill.crit { background:#ff5f57; }
 
-    .swgt-notes .swgt-body { }
-    .swgt-notes textarea { width:100%; background:transparent; border:none; outline:none;
+    .swgt-notes .swgt-body { padding:0; display:flex; flex-direction:column; }
+    .swgt-notes-handle { height:20px; background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.07); cursor:grab; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; color:rgba(255,255,255,0.2); }
+    .swgt-notes-handle:active { cursor:grabbing; }
+    .swgt-notes-handle:hover { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.4); }
+    .swgt-notes textarea { width:100%; flex:1; background:transparent; border:none; outline:none;
         color:#e8eaf6; font-size:13px; font-family:'Rajdhani',sans-serif; line-height:1.6;
-        padding:12px; resize:none; user-select:text; -webkit-user-select:text;
-        display:block; box-sizing:border-box; }
+        padding:10px 12px; resize:none; user-select:text; -webkit-user-select:text;
+        display:block; box-sizing:border-box; min-height:50px; }
 
     .swgt-quicklinks .swgt-body { padding:10px; }
     .swgt-ql-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
@@ -1858,6 +1872,17 @@ function _createWidget(wi) {
         });
     }
     if(wi.type==='quicklinks') _renderQuickLinks(wi);
+    if(wi.type==='todo')       _todoInit(wi);
+    if(wi.type==='timer')      _timerInit(wi.id);
+    if(wi.type==='worldclock') _startWorldClock(wi.id);
+    if(wi.type==='pomodoro')   _pomInit(wi.id);
+    if(wi.type==='color')      _colInit(wi.id);
+    if(wi.type==='news')       _fetchNews(wi.id);
+    if(wi.type==='calculator') {
+        var disp = el.querySelector('[id^="swgt-calc-disp-"]');
+        if(disp) { disp._calcState = {expr:'',display:'0'}; }
+        el.querySelectorAll('button').forEach(function(b){b.addEventListener('mousedown',function(e){e.stopPropagation();});});
+    }
 }
 
 window._toggleWgtCfg = function(btn) {
@@ -2000,6 +2025,66 @@ function _buildWidgetBody(wi) {
     if(wi.type==='stocks') {
         return '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px" id="swgt-tck-'+id+'">'+
             '<div style="color:rgba(232,234,246,0.35);font-size:12px;text-align:center">Loading...</div></div>';
+    }
+    if(wi.type==='todo') {
+        return '<div style="padding:8px 10px;display:flex;flex-direction:column;gap:6px">'+
+            '<div style="display:flex;gap:6px;margin-bottom:4px">'+
+            '<input id="swgt-todoinp-'+id+'" class="swgt-cfg-input" style="flex:1;padding:6px 8px;font-size:12px" placeholder="Add task..." onkeydown="if(event.key==='Enter')_todoAdd(''+id+'')">'+
+            '<button onclick="_todoAdd(''+id+'')" style="background:#6c8fff;border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px">+</button></div>'+
+            '<div id="swgt-todolist-'+id+'" style="display:flex;flex-direction:column;gap:4px;overflow-y:auto;max-height:160px"></div></div>';
+    }
+    if(wi.type==='timer') {
+        return '<div style="padding:14px;text-align:center">'+
+            '<div id="swgt-tim-'+id+'" style="font-family:Orbitron,monospace;font-size:28px;font-weight:700;color:#e8eaf6;letter-spacing:2px;margin-bottom:12px">00:00.0</div>'+
+            '<div style="display:flex;gap:8px;justify-content:center">'+
+            '<button onclick="_timerToggle(''+id+'')" id="swgt-timbtn-'+id+'" style="background:#6c8fff;border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Rajdhani,sans-serif">Start</button>'+
+            '<button onclick="_timerReset(''+id+'')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#e8eaf6;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Rajdhani,sans-serif">Reset</button>'+
+            '</div></div>';
+    }
+    if(wi.type==='calculator') {
+        return '<div style="padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px">'+
+            '<div id="swgt-calc-disp-'+id+'" style="grid-column:span 4;background:rgba(0,0,0,0.4);border-radius:6px;padding:8px 12px;font-family:Orbitron,monospace;font-size:18px;color:#e8eaf6;text-align:right;min-height:36px;word-break:break-all;margin-bottom:4px">0</div>'+
+            ['C','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.',⌫',
+'='].map(function(k){
+                var col=k==='='?'background:#6c8fff;color:#fff':'background:rgba(255,255,255,'+(~['÷','×','−','+','='].indexOf(k)?'0.12':'0.07')+')';
+                return '<button onclick="_calcKey(''+id+'',''+k+'')" style="'+col+';border:none;color:'+(k==='='?'#fff':'#e8eaf6')+';padding:9px 4px;border-radius:6px;cursor:pointer;font-size:13px;font-family:Rajdhani,sans-serif'+(k==='0'?';grid-column:span 2':'')+'">'+(k===⌫'?'⌫':k)+'</button>';
+            }).join('')+'</div>';
+    }
+    if(wi.type==='worldclock') {
+        var zones=cfg.zones||['UTC','America/New_York','Europe/London','Asia/Tokyo'];
+        return '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:6px" id="swgt-wc-'+id+'">'+
+            zones.map(function(z){
+                return '<div class="swgt-wc-row" style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+
+                '<span style="font-size:10px;color:rgba(232,234,246,0.4);text-transform:uppercase;letter-spacing:1px">'+z.split('/').pop().replace(/_/g,' ')+'</span>'+
+                '<span class="swgt-wc-time" data-tz="'+z+'" style="font-family:Orbitron,monospace;font-size:13px;color:#e8eaf6">--:--</span>'+
+                '</div>';
+            }).join('')+'</div>';
+    }
+    if(wi.type==='pomodoro') {
+        return '<div style="padding:14px;text-align:center">'+
+            '<div id="swgt-pom-mode-'+id+'" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#ff6b6b;margin-bottom:6px">FOCUS</div>'+
+            '<div id="swgt-pom-'+id+'" style="font-family:Orbitron,monospace;font-size:32px;font-weight:700;color:#e8eaf6;margin-bottom:8px">25:00</div>'+
+            '<div style="width:100%;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;margin-bottom:12px;overflow:hidden">'+
+            '<div id="swgt-pom-bar-'+id+'" style="height:100%;background:#ff6b6b;width:100%;transition:width 1s linear"></div></div>'+
+            '<div style="display:flex;gap:8px;justify-content:center">'+
+            '<button onclick="_pomToggle(''+id+'')" id="swgt-pombtn-'+id+'" style="background:#ff6b6b;border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Rajdhani,sans-serif">Start</button>'+
+            '<button onclick="_pomReset(''+id+'')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#e8eaf6;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Rajdhani,sans-serif">Reset</button>'+
+            '</div></div>';
+    }
+    if(wi.type==='color') {
+        return '<div style="padding:10px;display:flex;flex-direction:column;gap:8px">'+
+            '<div id="swgt-col-swatch-'+id+'" style="height:60px;border-radius:8px;background:#6c8fff;transition:background .3s"></div>'+
+            '<div style="display:flex;gap:6px;align-items:center">'+
+            '<input type="color" id="swgt-col-inp-'+id+'" value="#6c8fff" onchange="_colChange(''+id+'',this.value)" style="width:36px;height:28px;border:none;border-radius:6px;cursor:pointer;background:transparent">'+
+            '<input class="swgt-cfg-input" id="swgt-col-hex-'+id+'" value="#6c8fff" oninput="_colHexInput(''+id+'',this.value)" style="flex:1;padding:5px 8px;font-size:12px;font-family:Orbitron,monospace">'+
+            '<button onclick="_colRandom(''+id+'')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#e8eaf6;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px">🎲</button>'+
+            '</div>'+
+            '<div id="swgt-col-palette-'+id+'" style="display:flex;gap:4px;flex-wrap:wrap"></div>'+
+            '</div>';
+    }
+    if(wi.type==='news') {
+        return '<div style="padding:8px 12px;display:flex;flex-direction:column;gap:6px" id="swgt-news-'+id+'">'+
+            '<div style="color:rgba(232,234,246,0.3);font-size:12px;text-align:center;padding:10px 0">Loading headlines...</div></div>';
     }
     return '';
 }
@@ -2169,7 +2254,7 @@ function _renderQuickLinks(wi) {
     var links = (wi.cfg&&wi.cfg.links)||[];
     if(!links.length) { grid.innerHTML='<div style="color:rgba(232,234,246,0.3);font-size:12px;text-align:center;padding:8px">Open ⚙ to add links</div>'; return; }
     grid.innerHTML = links.map(function(l){
-        var domain = l.url.replace('https://','').replace('http://','').split('/')[0];
+        var domain = l.url.replace(/https?:\\/\\//,'').split('/')[0];
         var icon = 'https://www.google.com/s2/favicons?domain='+domain+'&sz=32';
         return '<div class="swgt-ql-link" onclick="_wgtOpenLink(\''+l.url+'\')"><img src="'+icon+'" onerror="this.style.display=\'none\'"><span>'+l.label+'</span></div>';
     }).join('');
@@ -2328,6 +2413,219 @@ window._fetchQuote = function(id) {
     var qa=document.getElementById('swgt-qa-'+id); if(qa) qa.textContent='— '+q.a;
 };
 
+
+/* ── TODO widget ─────────────────────────────────────────── */
+function _todoInit(wi) {
+    var id = wi.id;
+    var items = (wi.cfg && wi.cfg.todos) || [];
+    _todoRender(id, items);
+    var inp = document.getElementById('swgt-todoinp-'+id);
+    if(inp) inp.addEventListener('mousedown', function(e){e.stopPropagation();});
+}
+window._todoAdd = function(id) {
+    var inp = document.getElementById('swgt-todoinp-'+id);
+    if(!inp || !inp.value.trim()) return;
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(!wi) return;
+    if(!wi.cfg) wi.cfg={};
+    if(!wi.cfg.todos) wi.cfg.todos=[];
+    wi.cfg.todos.push({text:inp.value.trim(), done:false});
+    inp.value='';
+    _saveWidgets();
+    _todoRender(id, wi.cfg.todos);
+};
+function _todoRender(id, items) {
+    var list = document.getElementById('swgt-todolist-'+id);
+    if(!list) return;
+    list.innerHTML = (items||[]).map(function(it, i) {
+        return '<div style="display:flex;align-items:center;gap:6px;padding:4px 2px">'
+            +'<input type="checkbox" '+(it.done?'checked':'')
+            +' onchange="_todoDone(''+id+'','+i+',this.checked)" style="cursor:pointer;accent-color:#6c8fff">'
+            +'<span style="flex:1;font-size:12px;color:'+(it.done?'rgba(232,234,246,0.3)':'#e8eaf6')+';'+(it.done?'text-decoration:line-through':'')+'">'+it.text+'</span>'
+            +'<button onclick="_todoRemove(''+id+'','+i+')" style="background:none;border:none;color:rgba(255,95,87,0.5);cursor:pointer;font-size:12px;padding:0 2px">✕</button>'
+            +'</div>';
+    }).join('') || '<div style="color:rgba(232,234,246,0.25);font-size:11px;text-align:center;padding:8px">No tasks yet</div>';
+}
+window._todoDone = function(id, i, val) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(wi && wi.cfg && wi.cfg.todos && wi.cfg.todos[i]) {
+        wi.cfg.todos[i].done = val; _saveWidgets(); _todoRender(id, wi.cfg.todos);
+    }
+};
+window._todoRemove = function(id, i) {
+    var wi = _widgetInstances.find(function(w){return w.id===id;});
+    if(wi && wi.cfg && wi.cfg.todos) {
+        wi.cfg.todos.splice(i,1); _saveWidgets(); _todoRender(id, wi.cfg.todos);
+    }
+};
+
+/* ── STOPWATCH widget ────────────────────────────────────── */
+var _timerState = {};
+function _timerInit(id) { _timerState[id] = {running:false, ms:0, start:0, ival:null}; }
+window._timerToggle = function(id) {
+    var s = _timerState[id]; if(!s) return;
+    var btn = document.getElementById('swgt-timbtn-'+id);
+    if(s.running) {
+        clearInterval(s.ival); s.ms += Date.now()-s.start; s.running=false;
+        if(btn) btn.textContent='Start';
+    } else {
+        s.start = Date.now(); s.running = true;
+        s.ival = setInterval(function(){ _timerTick(id); }, 100);
+        if(btn) btn.textContent='Pause';
+    }
+};
+window._timerReset = function(id) {
+    var s = _timerState[id]; if(!s) return;
+    clearInterval(s.ival); s.running=false; s.ms=0; s.start=0;
+    var el=document.getElementById('swgt-tim-'+id); if(el) el.textContent='00:00.0';
+    var btn=document.getElementById('swgt-timbtn-'+id); if(btn) btn.textContent='Start';
+};
+function _timerTick(id) {
+    var s=_timerState[id]; if(!s) return;
+    var total = s.ms + (s.running ? Date.now()-s.start : 0);
+    var min=Math.floor(total/60000), sec=Math.floor(total%60000/1000), ds=Math.floor(total%1000/100);
+    var el=document.getElementById('swgt-tim-'+id);
+    if(el) el.textContent=(min<10?'0'+min:min)+':'+(sec<10?'0'+sec:sec)+'.'+ds;
+}
+
+/* ── CALCULATOR widget ───────────────────────────────────── */
+window._calcKey = function(id, key) {
+    var disp = document.getElementById('swgt-calc-disp-'+id);
+    if(!disp) return;
+    if(!disp._s) disp._s={expr:'',display:'0'};
+    var s=disp._s;
+    if(key==='C'){s.expr='';s.display='0';}
+    else if(key==='⌫'){s.expr=s.expr.slice(0,-1);s.display=s.expr||'0';}
+    else if(key==='='){
+        try{
+            var e=s.expr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+            var r=Function('return '+e)();
+            s.display=String(Math.round(r*1e10)/1e10);
+            s.expr=s.display;
+        }catch(e){s.display='Error';s.expr='';}
+    } else if(key==='±'){
+        var n=parseFloat(s.display);
+        if(!isNaN(n)){s.display=String(-n);s.expr=s.display;}
+    } else if(key==='%'){
+        var n=parseFloat(s.display);
+        if(!isNaN(n)){s.display=String(n/100);s.expr=s.display;}
+    } else {
+        s.expr+=key; s.display=s.expr;
+    }
+    disp.textContent=s.display;
+};
+
+/* ── WORLD CLOCK ─────────────────────────────────────────── */
+function _startWorldClock(id) {
+    function tick(){
+        var rows = document.querySelectorAll('#swgt-wc-'+id+' .swgt-wc-time');
+        rows.forEach(function(span){
+            var tz=span.dataset.tz;
+            try{
+                var t=new Date().toLocaleTimeString('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
+                span.textContent=t;
+            }catch(e){span.textContent='--:--';}
+        });
+    }
+    tick(); setInterval(tick,10000);
+}
+
+/* ── POMODORO timer ──────────────────────────────────────── */
+var _pomState = {};
+function _pomInit(id) {
+    _pomState[id]={running:false,focusSec:25*60,breakSec:5*60,left:25*60,isFocus:true,ival:null};
+    _pomRender(id);
+}
+window._pomToggle = function(id) {
+    var s=_pomState[id]; if(!s) return;
+    if(s.running){clearInterval(s.ival);s.running=false;}
+    else{
+        s.running=true;
+        s.ival=setInterval(function(){
+            s.left--;
+            if(s.left<=0){
+                clearInterval(s.ival); s.running=false;
+                s.isFocus=!s.isFocus;
+                s.left=s.isFocus?s.focusSec:s.breakSec;
+            }
+            _pomRender(id);
+        },1000);
+    }
+    var btn=document.getElementById('swgt-pombtn-'+id);
+    if(btn)btn.textContent=s.running?'Pause':'Start';
+};
+window._pomReset = function(id) {
+    var s=_pomState[id]; if(!s) return;
+    clearInterval(s.ival); s.running=false; s.isFocus=true;
+    s.left=s.focusSec; _pomRender(id);
+    var btn=document.getElementById('swgt-pombtn-'+id); if(btn)btn.textContent='Start';
+};
+function _pomRender(id) {
+    var s=_pomState[id]; if(!s) return;
+    var total=s.isFocus?s.focusSec:s.breakSec;
+    var pct=s.left/total*100;
+    var m=Math.floor(s.left/60),sec=s.left%60;
+    var t=document.getElementById('swgt-pom-'+id);
+    if(t)t.textContent=(m<10?'0'+m:m)+':'+(sec<10?'0'+sec:sec);
+    var bar=document.getElementById('swgt-pom-bar-'+id);
+    if(bar)bar.style.width=pct+'%';
+    var mode=document.getElementById('swgt-pom-mode-'+id);
+    if(mode)mode.textContent=s.isFocus?'FOCUS':'BREAK';
+}
+
+/* ── COLOR PICKER ────────────────────────────────────────── */
+function _colInit(id) {
+    _colRandom(id);
+}
+window._colChange = function(id, hex) {
+    var swatch=document.getElementById('swgt-col-swatch-'+id);
+    var hexInp=document.getElementById('swgt-col-hex-'+id);
+    var colInp=document.getElementById('swgt-col-inp-'+id);
+    if(swatch) swatch.style.background=hex;
+    if(hexInp) hexInp.value=hex;
+    if(colInp) colInp.value=hex;
+    _colPalette(id, hex);
+};
+window._colHexInput = function(id, val) {
+    if(/^#[0-9A-Fa-f]{6}$/.test(val)) _colChange(id, val);
+};
+window._colRandom = function(id) {
+    var h='#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');
+    _colChange(id,h);
+};
+function _colPalette(id, base) {
+    var pal=document.getElementById('swgt-col-palette-'+id);
+    if(!pal) return;
+    function lighten(hex, amt) {
+        var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+        r=Math.min(255,r+amt);g=Math.min(255,g+amt);b=Math.min(255,b+amt);
+        return '#'+[r,g,b].map(function(v){return v.toString(16).padStart(2,'0');}).join('');
+    }
+    var shades=[-80,-50,-20,0,20,50,80];
+    pal.innerHTML=shades.map(function(s){
+        var c=lighten(base,s);
+        return '<div title="'+c+'" onclick="navigator.clipboard&&navigator.clipboard.writeText(''+c+'')" style="flex:1;min-width:20px;height:24px;background:'+c+';border-radius:4px;cursor:pointer" title="'+c+'"></div>';
+    }).join('');
+}
+
+/* ── RSS NEWS headlines ──────────────────────────────────── */
+var _HEADLINES = [
+    'Global markets rise on positive economic data','New AI models break performance records',
+    'Climate summit reaches historic agreement','Tech giants report strong quarterly earnings',
+    'Space mission launches to explore distant asteroid','Scientists discover new exoplanet',
+    'Major cities adopt new public transport plans','Record renewable energy output this month',
+    'New study links sleep to cognitive performance','Electric vehicles surpass 20% market share',
+];
+function _fetchNews(id) {
+    var el=document.getElementById('swgt-news-'+id);
+    if(!el) return;
+    var items=_HEADLINES.sort(function(){return Math.random()-.5;}).slice(0,5);
+    el.innerHTML=items.map(function(h,i){
+        return '<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:11px;color:rgba(232,234,246,0.7);line-height:1.4;cursor:pointer" onclick="_wgtOpenLink('https://news.google.com/search?q='+encodeURIComponent(h)+'')">'+
+            '<span style="color:#6c8fff;margin-right:4px">'+(i+1)+'.</span>'+h+'</div>';
+    }).join('');
+}
+
 /* ── Crypto ticker ───────────────────────────────────────── */
 function _fetchStocks(id) {
     var container=document.getElementById('swgt-tck-'+id);
@@ -2360,8 +2658,9 @@ function _widgetDragStart(e,id) {
     _wgtDrag={id:id,el:el,sx:e.clientX,sy:e.clientY,
         ox:parseFloat(el.style.left)||0,oy:parseFloat(el.style.top)||0};
     el.style.zIndex=300;
-    // close any open popovers
     document.querySelectorAll('.swgt-cfg-popover.open').forEach(function(p){p.classList.remove('open');});
+    // Prevent iframes stealing mousemove
+    document.querySelectorAll('iframe').forEach(function(f){f.style.pointerEvents='none';});
 }
 document.addEventListener('mousemove',function(e){
     if(_wgtDrag){
@@ -2383,11 +2682,13 @@ document.addEventListener('mouseup',function(){
         var wi=_widgetInstances.find(function(w){return w.id===_wgtDrag.id;});
         if(wi){wi.x=parseFloat(_wgtDrag.el.style.left)||0;wi.y=parseFloat(_wgtDrag.el.style.top)||0;_saveWidgets();}
         _wgtDrag.el.style.zIndex=80; _wgtDrag=null;
+        document.querySelectorAll('iframe').forEach(function(f){f.style.pointerEvents='';});
     }
     if(_wgtResize){
         var wi=_widgetInstances.find(function(w){return w.id===_wgtResize.id;});
         if(wi){wi.w=parseFloat(_wgtResize.el.style.width)||null;wi.h=parseFloat(_wgtResize.el.style.height)||null;_saveWidgets();}
         _wgtResize=null;
+        document.querySelectorAll('iframe').forEach(function(f){f.style.pointerEvents='';});
     }
 });
 
@@ -2399,6 +2700,7 @@ window._widgetResizeStart=function(e,id){
     if(!el) return;
     _wgtResize={id:id,el:el,sx:e.clientX,sy:e.clientY,
         sw:el.offsetWidth,sh:el.offsetHeight};
+    document.querySelectorAll('iframe').forEach(function(f){f.style.pointerEvents='none';});
 };
 
 /* ── Sidebar stats updater ───────────────────────────────── */
