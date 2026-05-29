@@ -2,123 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spotify</title>
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, sans-serif; }
-
-        /* ── Top bar ─────────────────────────── */
-        #nav {
-            position: fixed; top: 0; left: 0; right: 0; height: 44px; z-index: 9999;
-            background: rgba(10,10,10,0.95); backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            display: flex; align-items: center; gap: 8px; padding: 0 12px;
-        }
-        .nav-logo {
-            display: flex; align-items: center; gap: 8px;
-            color: #1db954; font-size: 13px; font-weight: 700; letter-spacing: 1px;
-        }
-        .nav-logo svg { width: 18px; height: 18px; fill: #1db954; flex-shrink: 0; }
-        .nav-sep { flex: 1; }
-        .nav-btn {
-            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.6); padding: 4px 12px; border-radius: 6px;
-            cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.15s;
-        }
-        .nav-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        #nav-status { font-size: 11px; color: rgba(255,255,255,0.3); }
-
-        /* ── Loader ─────────────────────────── */
-        #loader {
-            position: fixed; inset: 44px 0 0 0;
-            background: #000;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 20px;
-            z-index: 100; transition: opacity 0.5s;
-        }
-        .sp-icon svg { width: 72px; height: 72px; fill: #1db954; }
-        .sp-icon svg { animation: pulse 1.8s ease-in-out infinite; }
-        @keyframes pulse {
-            0%,100% { transform: scale(1); opacity: 1; }
-            50%      { transform: scale(1.06); opacity: 0.8; }
-        }
-        .sp-label { color: #fff; font-size: 16px; font-weight: 700; letter-spacing: 2px; }
-        .sp-sub   { color: rgba(255,255,255,0.35); font-size: 11px; }
-        .sp-bar-wrap { width: 200px; height: 3px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
-        .sp-bar-fill { height: 100%; width: 0; background: #1db954; animation: spload 2.2s ease-out forwards; }
-        @keyframes spload { to { width: 100%; } }
-
-        /* ── Iframe ─────────────────────────── */
-        #sp-frame {
-            position: fixed; inset: 44px 0 0 0;
-            width: 100%; height: calc(100% - 44px);
-            border: none; background: #000; display: block;
-        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,sans-serif}
+        #nav{position:fixed;top:0;left:0;right:0;height:44px;z-index:9999;background:rgba(10,10,10,0.97);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px;padding:0 14px}
+        .sp-logo{display:flex;align-items:center;gap:8px;color:#1db954;font-size:13px;font-weight:700;letter-spacing:1px;flex-shrink:0}
+        .sp-logo svg{width:18px;height:18px;fill:#1db954}
+        #nav-sep{flex:1}
+        #nav-status{font-size:11px;color:rgba(255,255,255,0.3)}
+        .nbtn{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s}
+        .nbtn:hover{background:rgba(255,255,255,0.15);color:#fff}
+        #loader{position:fixed;inset:44px 0 0 0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100;transition:opacity .5s}
+        .spi svg{width:64px;height:64px;fill:#1db954;animation:pulse 1.8s ease-in-out infinite}
+        @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.8}}
+        .sp-lbl{color:#fff;font-size:15px;font-weight:700;letter-spacing:2px}
+        .sp-bar{width:200px;height:3px;background:#1a1a1a;border-radius:2px;overflow:hidden}
+        .sp-fill{height:100%;width:0;background:#1db954;animation:spl 2s ease-out forwards}
+        @keyframes spl{to{width:100%}}
+        .sp-sub{color:rgba(255,255,255,0.3);font-size:11px}
+        #sp-frame{position:fixed;inset:44px 0 0 0;width:100%;height:calc(100% - 44px);border:none;background:#000}
     </style>
 </head>
 <body>
-
 <div id="nav">
-    <div class="nav-logo">
-        <!-- Spotify icon -->
+    <div class="sp-logo">
         <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.516 17.313a.75.75 0 01-1.032.244c-2.825-1.727-6.383-2.117-10.573-1.16a.75.75 0 01-.334-1.463c4.585-1.047 8.519-.597 11.694 1.346a.75.75 0 01.245 1.033zm1.47-3.27a.937.937 0 01-1.29.308c-3.233-1.987-8.162-2.563-11.986-1.403a.938.938 0 01-.544-1.793c4.37-1.325 9.797-.683 13.512 1.597a.937.937 0 01.308 1.291zm.126-3.405C15.422 8.4 9.396 8.206 5.86 9.3a1.125 1.125 0 01-.651-2.151c4.083-1.237 10.868-1.01 15.155 1.627a1.125 1.125 0 01-1.252 1.862z"/></svg>
         SPOTIFY
     </div>
-    <div class="nav-sep"></div>
-    <span id="nav-status">Loading via proxy...</span>
-    <button class="nav-btn" onclick="openFull()">⛶ Fullscreen</button>
+    <div id="nav-sep"></div>
+    <span id="nav-status">Connecting via proxy...</span>
+    <button class="nbtn" onclick="openFS()">⛶ Fullscreen</button>
 </div>
-
 <div id="loader">
-    <div class="sp-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.516 17.313a.75.75 0 01-1.032.244c-2.825-1.727-6.383-2.117-10.573-1.16a.75.75 0 01-.334-1.463c4.585-1.047 8.519-.597 11.694 1.346a.75.75 0 01.245 1.033zm1.47-3.27a.937.937 0 01-1.29.308c-3.233-1.987-8.162-2.563-11.986-1.403a.938.938 0 01-.544-1.793c4.37-1.325 9.797-.683 13.512 1.597a.937.937 0 01.308 1.291zm.126-3.405C15.422 8.4 9.396 8.206 5.86 9.3a1.125 1.125 0 01-.651-2.151c4.083-1.237 10.868-1.01 15.155 1.627a1.125 1.125 0 01-1.252 1.862z"/></svg>
-    </div>
-    <div class="sp-label">SPOTIFY</div>
-    <div class="sp-bar-wrap"><div class="sp-bar-fill"></div></div>
-    <div class="sp-sub">Connecting via relay.neurosama.place...</div>
+    <div class="spi"><svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.516 17.313a.75.75 0 01-1.032.244c-2.825-1.727-6.383-2.117-10.573-1.16a.75.75 0 01-.334-1.463c4.585-1.047 8.519-.597 11.694 1.346a.75.75 0 01.245 1.033zm1.47-3.27a.937.937 0 01-1.29.308c-3.233-1.987-8.162-2.563-11.986-1.403a.938.938 0 01-.544-1.793c4.37-1.325 9.797-.683 13.512 1.597a.937.937 0 01.308 1.291zm.126-3.405C15.422 8.4 9.396 8.206 5.86 9.3a1.125 1.125 0 01-.651-2.151c4.083-1.237 10.868-1.01 15.155 1.627a1.125 1.125 0 01-1.252 1.862z"/></svg></div>
+    <div class="sp-lbl">SPOTIFY</div>
+    <div class="sp-bar"><div class="sp-fill"></div></div>
+    <div class="sp-sub" id="loader-status">Loading proxy...</div>
 </div>
-
-<iframe id="sp-frame" src="about:blank"
-    allowfullscreen
+<iframe id="sp-frame" src="about:blank" allowfullscreen
     allow="autoplay; fullscreen; gamepad; pointer-lock; clipboard-read; clipboard-write; microphone; camera"
-    referrerpolicy="no-referrer">
-</iframe>
-
+    referrerpolicy="no-referrer"></iframe>
 <script>
-    var TARGET = 'https://open.spotify.com';
     var PROXY  = 'https://relay.neurosama.place/';
+    var TARGET = 'https://open.spotify.com';
     var frame  = document.getElementById('sp-frame');
     var loader = document.getElementById('loader');
     var status = document.getElementById('nav-status');
+    var lstatus = document.getElementById('loader-status');
 
-    function openFull() {
-        var el = document.getElementById('sp-frame');
-        var req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
-        if (req) req.call(el);
+    function proxyUrl(url) {
+        try {
+            var b64 = btoa(url).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+            return PROXY + '~/uJDQ=/' + b64;
+        } catch(e) { return PROXY; }
     }
 
-    // Step 1: load the proxy root to register its service worker
-    frame.src = PROXY;
+    function openFS() {
+        var el = document.getElementById('sp-frame');
+        var req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+        if(req) req.call(el);
+    }
+
+    // Load Spotify via proxy
+    lstatus.textContent = 'Connecting to relay.neurosama.place...';
+    frame.src = proxyUrl(TARGET);
 
     frame.onload = function() {
-        status.textContent = 'Proxy loaded — navigating to Spotify...';
-
-        // Step 2: try to navigate within the proxy to Spotify
-        // Scramjet proxies the target URL through the service worker once registered
-        try {
-            frame.contentWindow.location.href = TARGET;
-        } catch(e) {
-            // Cross-origin block (service worker handles navigation)
-            // The proxy's SW should intercept and serve Spotify
-        }
-
-        // Fade out loader after a short delay
+        lstatus.textContent = 'Spotify loaded!';
+        status.textContent = 'Spotify via proxy';
         setTimeout(function() {
             loader.style.opacity = '0';
-            setTimeout(function() { loader.style.display = 'none'; }, 500);
-            status.textContent = 'Spotify via proxy';
-        }, 2000);
+            setTimeout(function(){ loader.style.display='none'; }, 500);
+        }, 800);
+    };
+
+    frame.onerror = function() {
+        lstatus.textContent = 'Try loading proxy homepage instead';
+        status.textContent = 'Proxy error — loading homepage';
+        frame.src = PROXY;
     };
 </script>
 </body>
